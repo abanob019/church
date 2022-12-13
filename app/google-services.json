@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "950780584448",
+    "firebase_url": "https://churchapp-910a5.firebaseio.com",
+    "project_id": "churchapp-910a5",
+    "storage_bucket": "churchapp-910a5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:950780584448:android:f581bac5ec7e3133",
+        "android_client_info": {
+          "package_name": "abanob.prog.awlade.com.awlade"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "950780584448-t4gh0csomfi8960k9tbhp4f3em5bogd3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3VgKq4SoH3Ga_r1jUbQLKzC19SpsMYQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "950780584448-t4gh0csomfi8960k9tbhp4f3em5bogd3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:950780584448:android:537129a49a19cc7a6baee5",
+        "android_client_info": {
+          "package_name": "com.azmiradi.churchapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "950780584448-t4gh0csomfi8960k9tbhp4f3em5bogd3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3VgKq4SoH3Ga_r1jUbQLKzC19SpsMYQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "950780584448-t4gh0csomfi8960k9tbhp4f3em5bogd3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
