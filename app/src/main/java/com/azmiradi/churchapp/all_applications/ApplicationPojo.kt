@@ -1,21 +1,19 @@
 package com.azmiradi.churchapp.all_applications
 
 class ApplicationPojo(
-    val nationalID: String? = null,
+    var email: String? = null,
 
-    val phone: String? = null,
+    var nationalID: String? = null,
 
-    val jobTitle: String? = null,
+    var phone: String? = null,
 
-    val name: String? = null,
+    var jobTitle: String? = null,
 
-    val employer: String? = null,
+    var title: String? = null,
 
-    val image1: String? = null,
+    var name: String? = null,
 
-    val title: String? = null,
-
-    val image2: String? = null,
+    var employer: String? = null,
 
     var className: String? = null,
 
@@ -24,4 +22,9 @@ class ApplicationPojo(
     var isApproved: Boolean? = null,
 
     var note: String? = null,
+
+    var isSandedApproved: Boolean? = null,
+    var image2: String? = null,
+
+    var image1: String? = null,
 )

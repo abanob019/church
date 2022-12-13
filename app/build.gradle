@@ -84,6 +84,9 @@ dependencies {
     implementation "com.google.dagger:hilt-android:2.38.1"
     kapt "com.google.dagger:hilt-compiler:2.40.1"
     implementation "com.github.skydoves:colorpicker-compose:1.0.1"
+    implementation 'com.sun.mail:android-mail:1.6.4'
+    implementation 'com.github.alexzhirkevich:custom-qr-generator:1.5.3'
+    implementation files('libs/poi-3.7.jar')
 
 
 }

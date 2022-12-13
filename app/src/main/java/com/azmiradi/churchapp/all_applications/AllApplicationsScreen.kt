@@ -26,16 +26,15 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azmiradi.churchapp.NavigationDestination.APPLICATION_DETAILS
 import com.azmiradi.churchapp.ProgressBar
+import com.azmiradi.churchapp.exel.common.ExcelUtils
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun AllApplicationsScreen(
     viewModel: AllApplicationViewModel = hiltViewModel(),
-    onNavigate: (String,String) -> Unit
+    onNavigate: (String, String) -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.getApplications()
-    }
+
 
     val state = viewModel.stateApplications.value
     val context = LocalContext.current
@@ -50,10 +49,17 @@ fun AllApplicationsScreen(
         mutableStateListOf<ApplicationPojo>()
     }
 
+    LaunchedEffect(Unit) {
+        //  viewModel.getApplications()
+        applicationsList.addAll(ExcelUtils.readFromExcelWorkbook(context,"1670959220829.xls"))
+        println("applicationsList:: "+ applicationsList.size)
+    }
+
     state.data?.let {
         LaunchedEffect(Unit) {
             applicationsList.clear()
             applicationsList.addAll(it)
+            ExcelUtils.exportDataIntoWorkbook(context, "contacts.xls", applicationsList)
         }
     }
     Scaffold(topBar = {
@@ -78,7 +84,7 @@ fun AllApplicationsScreen(
 
             items(applicationsList) {
                 ApplicationItem(it) {
-                    onNavigate(APPLICATION_DETAILS,it.nationalID?:"")
+                    onNavigate(APPLICATION_DETAILS, it.nationalID ?: "")
                 }
             }
         }
