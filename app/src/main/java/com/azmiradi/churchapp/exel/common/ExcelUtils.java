@@ -39,15 +39,9 @@ public class ExcelUtils {
 
     private static List<ApplicationPojo> importedExcelData;
 
-    /**
-     * Import data from Excel Workbook
-     *
-     * @param context  - Application Context
-     * @param fileName - Name of the excel file
-     * @return importedExcelData
-     */
-    public static List<ApplicationPojo> readFromExcelWorkbook(Context context, String fileName) {
-        return retrieveExcelFromStorage(context, fileName);
+
+    public static List<ApplicationPojo> readFromExcelWorkbook(File file) {
+        return retrieveExcelFromStorage(file);
     }
 
 
@@ -179,6 +173,10 @@ public class ExcelUtils {
         cell = headerRow.createCell(13);
         cell.setCellValue("خلفية البطاقة");
         cell.setCellStyle(headerCellStyle);
+
+        cell = headerRow.createCell(14);
+        cell.setCellValue("حضور");
+        cell.setCellStyle(headerCellStyle);
     }
 
 
@@ -254,6 +252,10 @@ public class ExcelUtils {
             cell = rowData.createCell(13);
             cell.setCellValue(dataList.get(i).getImage2());
 
+            // Create Cells for each row
+            cell = rowData.createCell(14);
+            cell.setCellValue(Boolean.TRUE.equals(dataList.get(i).isAttend()));
+
         }
     }
 
@@ -313,17 +315,10 @@ public class ExcelUtils {
         return isSuccess;
     }
 
-    /**
-     * Retrieve excel from External Storage
-     *
-     * @param context  - application context
-     * @param fileName - name of workbook to be read
-     * @return importedExcelData
-     */
-    private static List<ApplicationPojo> retrieveExcelFromStorage(Context context, String fileName) {
+
+    private static List<ApplicationPojo> retrieveExcelFromStorage(File file) {
         importedExcelData = new ArrayList<>();
 
-        File file = new File(commonDocumentDirPath("FilesExels"), fileName);
         FileInputStream fileInputStream = null;
 
         try {
@@ -388,10 +383,14 @@ public class ExcelUtils {
                         if (index == 13)
                             applicationPojo.setImage2(cell.getStringCellValue());
 
+                        if (index == 14)
+                            applicationPojo.setAttend(cell.getBooleanCellValue());
+
                         index++;
                     }
                 }
-                importedExcelData.add(applicationPojo);
+                if (applicationPojo.getNationalID() != null && !applicationPojo.getNationalID().equals(""))
+                    importedExcelData.add(applicationPojo);
             }
 
         } catch (IOException e) {

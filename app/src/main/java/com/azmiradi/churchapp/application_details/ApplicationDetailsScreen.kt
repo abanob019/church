@@ -164,6 +164,7 @@ fun ApplicationDetailsScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Spacer(modifier = Modifier.height(20.dp))
             CustomText(value = applicationPojo?.title ?: "----", title = "اللقب")
             CustomText(value = applicationPojo?.name ?: "----", title = "الاسم")
@@ -234,7 +235,6 @@ fun ApplicationDetailsScreen(
                         )
                     }
                 }
-
             } else {
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(modifier = Modifier.fillMaxWidth(), onClick = {

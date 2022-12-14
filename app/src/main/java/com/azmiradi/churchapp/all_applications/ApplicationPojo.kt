@@ -22,9 +22,8 @@ class ApplicationPojo(
     var isApproved: Boolean? = null,
 
     var note: String? = null,
-
     var isSandedApproved: Boolean? = null,
     var image2: String? = null,
-
     var image1: String? = null,
+    var isAttend: Boolean? = null,
 )

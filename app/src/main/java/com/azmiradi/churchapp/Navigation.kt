@@ -16,7 +16,6 @@ import com.azmiradi.churchapp.application_details.ApplicationDetailsScreen
 import com.azmiradi.churchapp.dialogs.AddClassDialog
 import com.azmiradi.churchapp.dialogs.AddZoneDialog
 import com.azmiradi.churchapp.main_screen.MainScreen
-import com.azmiradi.churchapp.scan.ScanScreen
 
 @Composable
 fun Navigation() {
@@ -34,9 +33,7 @@ fun Navigation() {
                 navController.navigate(destination.replace("{applicationID}", nationalID))
             })
         }
-        composable(SCAN_ID) {
-            ScanScreen()
-        }
+
         composable(APPLICATION_DETAILS) {
             val applicationID = it.arguments?.getString("applicationID", "not_found") ?: "not_found"
             ApplicationDetailsScreen(applicationID, onNavigation =  {

@@ -93,23 +93,13 @@ object RealPathUtil {
             } else if (isMediaDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                val type = split[0]
-
-                var contentUri: Uri? = null
-                when (type) {
-                    "image" -> contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    "video" -> contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    "audio" -> contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                }
-
+                val contentUri: Uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
-
                 return getDataColumn(context, contentUri, selection, selectionArgs)
             }// MediaProvider
             // DownloadsProvider
         } else if ("content".equals(uri.scheme!!, ignoreCase = true)) {
-
             // Return the remote address
             return if (isGooglePhotosUri(uri)) uri.lastPathSegment else getDataColumn(
                 context,
