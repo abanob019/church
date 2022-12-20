@@ -19,7 +19,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.azmiradi.churchapp.NavigationDestination.ADD_CLASSES
 import com.azmiradi.churchapp.NavigationDestination.ADD_ZONE
 import com.azmiradi.churchapp.NavigationDestination.ALL_APPLICATIONS
-import com.azmiradi.churchapp.NavigationDestination.REPORTS
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.github.g00fy2.quickie.QRResult
@@ -28,8 +27,7 @@ import io.github.g00fy2.quickie.ScanQRCode
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel = hiltViewModel(),
-    onNavigate: (String) -> Unit
+    viewModel: MainViewModel = hiltViewModel(), onNavigate: (String) -> Unit
 ) {
     val cameraPermissionState = rememberMultiplePermissionsState(
         listOf(
@@ -50,14 +48,32 @@ fun MainScreen(
     val detailsDialog = rememberSaveable() {
         mutableStateOf(false)
     }
+
+    val detailsDialogOffline= rememberSaveable() {
+        mutableStateOf(false)
+    }
+
+    val isOffline = rememberSaveable() {
+        mutableStateOf(false)
+    }
+
+    val qrData = rememberSaveable() {
+        mutableStateOf("")
+    }
     val context = LocalContext.current
     val scanQrCodeLauncher = rememberLauncherForActivityResult(ScanQRCode()) { result ->
         when (result) {
             is QRResult.QRSuccess -> {
-                val nationalId = result.content.rawValue.split("\n")[2].split(":")[1].trim()
-                scannedID.value = nationalId
-                detailsDialog.value = true
-                allScannedData.value= result.content.rawValue
+                if (isOffline.value)
+                {
+                    detailsDialogOffline.value=true
+                    qrData.value=result.content.rawValue
+                }else {
+                    val nationalId = result.content.rawValue.split("\n")[2].split(":")[1].trim()
+                    scannedID.value = nationalId
+                    detailsDialog.value = true
+                    allScannedData.value = result.content.rawValue
+                }
             }
 
             is QRResult.QRError -> {
@@ -81,10 +97,9 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (cameraPermissionState.allPermissionsGranted) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 50.dp, start = 50.dp),
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 50.dp, start = 50.dp),
                 onClick = {
                     onNavigate(ALL_APPLICATIONS)
                 }) {
@@ -95,11 +110,11 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 50.dp, start = 50.dp),
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 50.dp, start = 50.dp),
                 onClick = {
+                    isOffline.value=false
                     scanQrCodeLauncher.launch(null)
                 }) {
                 Text(
@@ -109,22 +124,9 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 50.dp, start = 50.dp),
-                onClick = {
-                    onNavigate(REPORTS)
-                }) {
-                Text(text = "تقارير", fontSize = 16.sp)
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 50.dp, start = 50.dp),
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 50.dp, start = 50.dp),
                 onClick = {
                     onNavigate(ADD_ZONE)
                 }) {
@@ -133,20 +135,30 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 50.dp, start = 50.dp),
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 50.dp, start = 50.dp),
                 onClick = {
                     onNavigate(ADD_CLASSES)
                 }) {
                 Text(text = "اضافة فئة", fontSize = 16.sp)
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 50.dp, start = 50.dp),
+                onClick = {
+                    isOffline.value=true
+                    scanQrCodeLauncher.launch(null)
+                }) {
+                Text(text = "فحص اوفلاين", fontSize = 16.sp)
+            }
         } else {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 50.dp, start = 50.dp),
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 50.dp, start = 50.dp),
                 onClick = {
                     cameraPermissionState.launchMultiplePermissionRequest()
                 }) {
@@ -159,18 +171,27 @@ fun MainScreen(
 
     if (detailsDialog.value) {
         Dialog(properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        ),onDismissRequest = { detailsDialog.value = false }) {
-            ApplicationDetailsDialog(
-                applicationID = scannedID.value,
-                onAttend = {
-                    viewModel.sendMail(allScannedData.value,it)
-                    detailsDialog.value=false
-                },
-                onBack = {
-                    detailsDialog.value=false
-                })
+            dismissOnBackPress = false, dismissOnClickOutside = false
+        ), onDismissRequest = {
+            detailsDialog.value = false
+        }) {
+            ApplicationDetailsDialog(applicationID = scannedID.value, onAttend = {
+                viewModel.sendMail(allScannedData.value, it)
+                detailsDialog.value = false
+            }, onBack = {
+                detailsDialog.value = false
+            })
+        }
+    }
+
+    if (detailsDialogOffline.value) {
+        Dialog(properties = DialogProperties(
+            dismissOnBackPress = false, dismissOnClickOutside = false
+        ), onDismissRequest = {
+            detailsDialog.value = false
+        }) {
+            val color = qrData.value.split("\n")[6].trim()
+            ApplicationDetailsDialog(data = qrData.value, color =color )
         }
     }
 }

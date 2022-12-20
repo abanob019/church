@@ -7,9 +7,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,10 +28,14 @@ import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 
 @Composable
-fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(),onDismiss: () -> Unit) {
+fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(), onDismiss: () -> Unit) {
+    LaunchedEffect(Unit) {
+        viewModel.getAllZones()
+    }
+
     val state = viewModel.addState.value
     val context = LocalContext.current
-    ProgressBar(isShow = state.isLoading)
+    ProgressBar(isShow = state.isLoading || viewModel.stateZones.value.isLoading)
     if (state.error.isNotEmpty()) {
         LaunchedEffect(Unit) {
             Toast.makeText(context, "فشل اتمام العمليه", Toast.LENGTH_LONG).show()
@@ -45,6 +47,17 @@ fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(),onDismiss: () ->
             Toast.makeText(context, "تمت العمليه بنجاح", Toast.LENGTH_LONG).show()
         }
     }
+
+    val zonesList = remember {
+        mutableStateListOf<Zone>()
+    }
+    viewModel.stateZones.value.data?.let {
+        LaunchedEffect(Unit) {
+            zonesList.clear()
+            zonesList.addAll(it)
+        }
+    }
+
     val zoneName = rememberSaveable() {
         mutableStateOf("")
     }
@@ -92,10 +105,8 @@ fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(),onDismiss: () ->
             Spacer(modifier = Modifier.height(20.dp))
             Button(modifier = Modifier
                 .fillMaxWidth(), onClick = {
-                viewModel.addData(
-                    Zone(zoneName = zoneName.value, zoneColor = zoneColor.value),
-                    ZONE
-                )
+                zonesList.add(Zone(zoneName = zoneName.value, zoneColor = zoneColor.value, zoneID = zonesList.size))
+                viewModel.addList(zonesList, ZONE)
             }) {
                 Text(
                     text = "ارسال",

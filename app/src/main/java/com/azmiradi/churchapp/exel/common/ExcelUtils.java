@@ -230,7 +230,11 @@ public class ExcelUtils {
 
             // Create Cells for each row
             cell = rowData.createCell(8);
-            cell.setCellValue(dataList.get(i).getZoneID());
+            if (dataList.get(i).getZoneID() == null)
+                cell.setCellValue(0);
+            else
+                cell.setCellValue(dataList.get(i).getZoneID());
+
 
             // Create Cells for each row
             cell = rowData.createCell(9);
@@ -255,7 +259,6 @@ public class ExcelUtils {
             // Create Cells for each row
             cell = rowData.createCell(14);
             cell.setCellValue(Boolean.TRUE.equals(dataList.get(i).isAttend()));
-
         }
     }
 
@@ -366,7 +369,7 @@ public class ExcelUtils {
                             applicationPojo.setClassName(cell.getStringCellValue());
 
                         if (index == 8)
-                            applicationPojo.setZoneID(cell.getStringCellValue());
+                            applicationPojo.setZoneID((int) cell.getNumericCellValue());
 
                         if (index == 9)
                             applicationPojo.setApproved(cell.getBooleanCellValue());
@@ -385,6 +388,8 @@ public class ExcelUtils {
 
                         if (index == 14)
                             applicationPojo.setAttend(cell.getBooleanCellValue());
+
+
 
                         index++;
                     }

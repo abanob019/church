@@ -3,6 +3,7 @@ package com.azmiradi.churchapp.application_details
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -36,9 +37,12 @@ import com.github.alexzhirkevich.customqrgenerator.QrCodeGenerator
 import com.github.alexzhirkevich.customqrgenerator.QrData
 import com.github.alexzhirkevich.customqrgenerator.QrOptions
 import com.github.alexzhirkevich.customqrgenerator.style.*
+import com.izettle.html2bitmap.Html2Bitmap
+import com.izettle.html2bitmap.content.WebViewContent.html
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 
 
@@ -93,6 +97,17 @@ fun ApplicationDetailsScreen(
         mutableStateOf("")
     }
 
+    val char = remember {
+        mutableStateOf("")
+    }
+
+    val priority = remember {
+        mutableStateOf("0")
+    }
+    val row = remember {
+        mutableStateOf("")
+    }
+
     val qrImage = remember {
         mutableStateOf<Bitmap?>(null)
     }
@@ -122,10 +137,19 @@ fun ApplicationDetailsScreen(
 
             note.value = applicationPojo?.note ?: ""
 
+            row.value = applicationPojo?.row ?: ""
+
+            char.value = applicationPojo?.chare ?: ""
+
+            priority.value = (applicationPojo?.priority ?: 0).toString()
+
             if (applicationPojo?.isApproved == true) {
                 coroutineScope.launch(Dispatchers.IO) {
                     qrImage.value =
-                        context.createQRCode(applicationPojo, zone = zones[selectedZone.value])
+                        context.createQRCode(
+                            applicationPojo,
+                            zone = zones.getOrNull(selectedZone.value)
+                        )
                 }
             }
         }
@@ -136,7 +160,7 @@ fun ApplicationDetailsScreen(
         LaunchedEffect(Unit) {
             coroutineScope.launch(Dispatchers.IO) {
                 qrImage.value = context.createQRCode(
-                    applicationPojo = applicationPojo, zone = zones[selectedZone.value]
+                    applicationPojo = applicationPojo, zone = zones.getOrNull(selectedZone.value)
                 )
             }
             Toast.makeText(context, "تم تحديث البيانات", Toast.LENGTH_LONG).show()
@@ -172,22 +196,34 @@ fun ApplicationDetailsScreen(
             CustomText(value = applicationPojo?.nationalID ?: "----", title = "الرقم القومي")
             CustomText(value = applicationPojo?.phone ?: "----", title = "رقم الهاتف")
             CustomText(value = applicationPojo?.employer ?: "----", title = "الجهة")
-            SampleSpinner(
-                "المنطقه", list = zones.mapNotNull { it.zoneName }, selectedZone.value
-            ) {
-                selectedZone.value = it
-            }
+            Spacer(modifier = Modifier.height(10.dp))
+            CustomTextFile(data = priority, title = "الاولوية", keyboard = KeyboardType.Decimal)
             Spacer(modifier = Modifier.height(10.dp))
 
             SampleSpinner(
-                "الفئه", list = classes.mapNotNull {
+                "نوع الدعوة", list = classes.mapNotNull {
                     it.className
                 }, selectedClass.value
             ) {
                 selectedClass.value = it
             }
             Spacer(modifier = Modifier.height(10.dp))
-            CustomTextFile(data = note, title = "كتابة ملاحظات")
+
+
+            SampleSpinner(
+                "المنطقه", list = zones.mapNotNull { it.zoneName }, selectedZone.value
+            ) {
+                selectedZone.value = it
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            CustomTextFile(data = row, title = "الصف")
+
+            Spacer(modifier = Modifier.height(10.dp))
+            CustomTextFile(data = char, title = "الكرسي")
+
+            Spacer(modifier = Modifier.height(10.dp))
+            CustomTextFile(data = note, title = "كتابة ملاحظات", height = 150, isSingleLine = false)
 
             if (applicationPojo?.isApproved == true) {
                 Spacer(modifier = Modifier.height(10.dp))
@@ -202,16 +238,17 @@ fun ApplicationDetailsScreen(
                         .weight(1f)
                         .padding(end = 10.dp),
                         onClick = {
-                            val uri = qrImage.value?.saveBitmap(
-                                applicationPojo?.name + "_" + applicationPojo?.nationalID, context
+                            val url = qrImage.value?.saveBitmap(
+                                applicationPojo?.name + "_" + applicationPojo?.phone, context
                             )
-                            uri?.let {
-                                viewModel.sendMail(
-                                    applicationPojo?.email ?: "abanob019@gmail.com",
-                                    File(RealPathUtil.getRealPath(context, it).toString())
-                                )
-                            }
 
+                            Toast.makeText(context, "تم الحفظ", Toast.LENGTH_LONG).show()
+                            coroutineScope.launch(Dispatchers.IO) {
+                                context.prepareInvitation(
+                                    applicationName = applicationPojo?.name ?: "", url.toString()
+                                )
+                                    ?.saveBitmap("Azmi", context)
+                            }
                         }) {
                         Text(
                             text = "حفظ ال QR", fontSize = 16.sp
@@ -223,11 +260,14 @@ fun ApplicationDetailsScreen(
                         .weight(1f)
                         .padding(start = 10.dp),
                         onClick = {
-                            applicationPojo?.zoneID = zones[selectedZone.value].zoneID
+                            applicationPojo?.zoneID = zones.getOrNull(selectedZone.value)?.zoneID
                             applicationPojo?.isApproved = true
                             applicationPojo?.note = note.value
-                            applicationPojo?.className = classes[selectedClass.value].className
-
+                            applicationPojo?.chare = char.value
+                            applicationPojo?.row = row.value
+                            applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
+                            applicationPojo?.className =
+                                classes.getOrNull(selectedClass.value)?.className
                             applicationPojo?.let { viewModel.updateApplication(it) }
                         }) {
                         Text(
@@ -235,13 +275,47 @@ fun ApplicationDetailsScreen(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(Modifier.fillMaxWidth()) {
+                    Button(modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(end = 10.dp),
+                        onClick = {
+                            val image = qrImage.value?.saveBitmap(
+                                applicationPojo?.name + "_" + applicationPojo?.phone, context
+                            )
+                            image?.let {
+                                viewModel.sendMail(
+                                    applicationPojo?.email ?: "",
+                                    File(RealPathUtil.getRealPath(context, image).toString())
+                                )
+                            }
+
+                        }) {
+                        Text(text = "Email Invitation", fontSize = 16.sp)
+                    }
+
+                    Button(modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(start = 10.dp),
+                        onClick = {
+
+                        }) {
+                        Text(
+                            text = "Whatsapp Invitation", fontSize = 16.sp
+                        )
+                    }
+                }
             } else {
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                    applicationPojo?.zoneID = zones[selectedZone.value].zoneID
+                    applicationPojo?.zoneID = zones.getOrNull(selectedZone.value)?.zoneID
                     applicationPojo?.isApproved = true
                     applicationPojo?.note = note.value
-                    applicationPojo?.className = classes[selectedClass.value].className
+                    applicationPojo?.className = classes.getOrNull(selectedClass.value)?.className
                     applicationPojo?.let { viewModel.updateApplication(it) }
                 }) {
                     Text(
@@ -254,19 +328,38 @@ fun ApplicationDetailsScreen(
     }
 }
 
-fun Context.createQRCode(applicationPojo: ApplicationPojo?, zone: Zone): Bitmap {
-    val data = java.lang.StringBuilder("الحدث: قداس عيد الميلاد المجيد 2023").append("\n")
+fun Context.prepareInvitation(applicationName: String, qrImage: String): Bitmap? {
+    val inputStream: InputStream = assets.open("invitation.html")
+    val size = inputStream.available()
+
+    val buffer = ByteArray(size)
+    inputStream.read(buffer)
+    inputStream.close()
+
+    val html = String(buffer)
+  val fullImage=  html.replace("APPLICATION_NAME", applicationName)
+        .replace("QR_IMAGE", qrImage)
+    return Html2Bitmap.Builder().setContext(this).setBitmapWidth(1182).setContent(html(fullImage)).build().bitmap
+}
+
+fun Context.createQRCode(applicationPojo: ApplicationPojo?, zone: Zone?): Bitmap {
+    val data = java.lang.StringBuilder("قداس عيد الميلاد المجيد 2023").append("\n")
         .append(applicationPojo?.title + " : " + applicationPojo?.name).append("\n")
         .append("الرقم القومي: ").append(applicationPojo?.nationalID).append("\n")
-        .append("الوظيفة: ").append(applicationPojo?.jobTitle).append("\n").append("الجهة: ")
-        .append(applicationPojo?.employer).append("\n").append("منطقة الجلوس: ")
-        .append(zone.zoneName)
+        .append(applicationPojo?.jobTitle).append("\n")
+        .append(zone?.zoneName ?: "").append(" - ").append(applicationPojo?.row ?: "").append(" - ")
+        .append(applicationPojo?.chare ?: "").append("\n")
+        .append(applicationPojo?.employer)
+        .append("\n").append(zone?.zoneColor ?: "")
+
+    val cd = ColorDrawable(-0x999a)
 
     val options = QrOptions.Builder(1024).setPadding(.3f).setLogo(
+
         QrLogo(
             drawable = DrawableSource.Resource(R.mipmap.ic_launcher),
             size = .25f,
-            padding = QrLogoPadding.Accurate(.2f),
+            padding = QrLogoPadding.Accurate(.1f),
             shape = QrLogoShape.Circle
         )
     ).setColors(
@@ -279,8 +372,8 @@ fun Context.createQRCode(applicationPojo: ApplicationPojo?, zone: Zone): Bitmap 
             darkPixel = QrPixelShape.RoundCorners(),
             ball = QrBallShape.RoundCorners(.25f),
             frame = QrFrameShape.RoundCorners(.25f),
-        )
-    ).build()
+         )
+    ).setPadding(0f).build()
 
     val generator = QrCodeGenerator(this)
     return generator.generateQrCode(
@@ -320,7 +413,11 @@ fun CustomText(title: String = "title", value: String = "عزمي راضي عز�
 
 
 @Composable
-fun CustomTextFile(title: String = "title", data: MutableState<String>) {
+fun CustomTextFile(
+    height: Int? = null, title: String = "title", data: MutableState<String>,
+    keyboard: KeyboardType = KeyboardType.Text,
+    isSingleLine: Boolean = true
+) {
     Text(
         text = title, modifier = Modifier.fillMaxWidth(), fontSize = 14.sp, color = Color.DarkGray
     )
@@ -328,28 +425,37 @@ fun CustomTextFile(title: String = "title", data: MutableState<String>) {
     Spacer(modifier = Modifier.height(10.dp))
 
     Card(
-        modifier = Modifier
+        modifier = if (height != null) Modifier
             .fillMaxWidth()
-            .height(150.dp),
+            .height(150.dp) else Modifier
+            .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, Color.LightGray),
         backgroundColor = Color.White
     ) {
-        OutlinedTextField(value = data.value, colors = TextFieldDefaults.textFieldColors(
-            cursorColor = Color.Transparent,
-            backgroundColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            focusedLabelColor = Color.Transparent
-        ), onValueChange = {
-            data.value = it
-        }, placeholder = {
-            Text(
-                text = title, fontSize = 14.sp, fontWeight = FontWeight.Normal
-            )
-        }, modifier = Modifier.fillMaxWidth(), textStyle = TextStyle(
-            color = Color.DarkGray, fontWeight = FontWeight.Normal, fontSize = 14.sp
-        ), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+        OutlinedTextField(
+            singleLine = isSingleLine,
+            value = data.value,
+            colors = TextFieldDefaults.textFieldColors(
+                cursorColor = Color.Blue,
+                backgroundColor = Color.Transparent,
+                focusedIndicatorColor = Color.Blue,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedLabelColor = Color.Blue
+            ),
+            onValueChange = {
+                data.value = it
+            },
+            placeholder = {
+                Text(
+                    text = title, fontSize = 14.sp, fontWeight = FontWeight.Normal
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textStyle = TextStyle(
+                color = Color.DarkGray, fontWeight = FontWeight.Normal, fontSize = 14.sp
+            ),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboard)
         )
     }
 
@@ -457,19 +563,38 @@ fun Bitmap.saveBitmap(imageName: String, context: Context): Uri? {
             ).use { output ->
                 this.compress(Bitmap.CompressFormat.JPEG, 100, output)
             }
-            Toast.makeText(context, "تم حفظ الــQR", Toast.LENGTH_LONG).show()
+             Toast.makeText(context, "تم حفظ الــQR", Toast.LENGTH_LONG).show()
         } else {
-            Toast.makeText(context, "فشل حفظ الــQR", Toast.LENGTH_LONG).show()
+             Toast.makeText(context, "فشل حفظ الــQR", Toast.LENGTH_LONG).show()
         }
 
     } catch (e: Exception) {
-        Toast.makeText(context, e.toString() + "فشل حفظ الــQR", Toast.LENGTH_LONG).show()
-
+      Toast.makeText(context, e.toString() + "فشل حفظ الــQR", Toast.LENGTH_LONG).show()
     }
 
     return uri
 }
 
-
+//@Composable
+//fun editImage(){
+//    val annotatedString = buildAnnotatedString {
+//        append("This is text ")
+//        appendInlineContent(id = "imageId")
+//        append(" with a call icon")
+//    }
+//    val inlineContentMap = mapOf(
+//        "imageId" to InlineTextContent(
+//            Placeholder(20.sp, 20.sp, PlaceholderVerticalAlign.TextCenter)
+//        ) {
+//            Image(
+//                imageVector = Icons.Default.Call,
+//                modifier = Modifier.fillMaxSize(),
+//                contentDescription = ""
+//            )
+//        }
+//    )
+//
+//    Text(annotatedString, inlineContent = inlineContentMap)
+//}
 
 

@@ -4,8 +4,9 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,12 +28,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.onimur.handlepathoz.HandlePathOz
 import br.com.onimur.handlepathoz.HandlePathOzListener
 import br.com.onimur.handlepathoz.model.PathOz
+import com.azmiradi.churchapp.App
 import com.azmiradi.churchapp.NavigationDestination.APPLICATION_DETAILS
 import com.azmiradi.churchapp.ProgressBar
+import com.azmiradi.churchapp.application_details.CustomTextFile
+import com.azmiradi.churchapp.application_details.SampleSpinner
 import com.azmiradi.churchapp.exel.common.ExcelUtils
+import com.azmiradi.churchapp.ui.theme.SelectItemColor
 import kotlinx.coroutines.FlowPreview
 import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
 
 @OptIn(FlowPreview::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -42,6 +48,8 @@ fun AllApplicationsScreen(
 
     onNavigate: (String, String) -> Unit
 ) {
+
+
     val state = viewModel.stateApplications.value
     val stateSaveData = viewModel.stateUpdateData.value
 
@@ -55,6 +63,10 @@ fun AllApplicationsScreen(
 
     val selectedApplications = remember {
         mutableStateListOf<ApplicationPojo>()
+    }
+
+    val showDetermineApplicationsInfoDialog = remember {
+        mutableStateOf(false)
     }
     val hiltModules = remember {
         HandlePathOz(context, object : HandlePathOzListener.SingleUri {
@@ -75,7 +87,6 @@ fun AllApplicationsScreen(
             result?.let {
                 hiltModules.getRealPath(it)
             }
-
         }
 
     ProgressBar(isShow = state.isLoading || stateSaveData.isLoading)
@@ -101,9 +112,11 @@ fun AllApplicationsScreen(
     stateSaveData.data?.let {
         LaunchedEffect(it) {
             selectedIndex.value = 0
-            Toast.makeText(context, "تم حفظ الملف", Toast.LENGTH_LONG).show()
             showDataOfExile.value = false
+            showDetermineApplicationsInfoDialog.value = false
+            selectedApplications.clear()
             viewModel.getApplications()
+            Toast.makeText(context, "تم حفظ الملف", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -129,11 +142,12 @@ fun AllApplicationsScreen(
 
     }) {
         Column(Modifier.fillMaxSize()) {
-            CustomTabs(selectedIndex = selectedIndex)
+            CustomTabs(selectedIndex = selectedIndex, selectedItems = selectedApplications)
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(10.dp)) {
+                    .padding(10.dp)
+            ) {
                 Button(modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -169,14 +183,44 @@ fun AllApplicationsScreen(
                     )
                 }
             }
-            ShowItems(applicationsList) {
-                onNavigate(APPLICATION_DETAILS, it)
+
+            if (selectedApplications.isNotEmpty() &&
+                selectedIndex.value != ApplicationsType.All.id
+            ) {
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                    onClick = {
+                        if ((selectedIndex.value == ApplicationsType.Active.id)) {
+                            viewModel.updateData(selectedApplications.map {
+                                it.copy(isApproved = false)
+                            }, 0)
+
+                        } else {
+                            showDetermineApplicationsInfoDialog.value = true
+                        }
+                    }) {
+                    Text(
+                        text = if (selectedIndex.value == ApplicationsType.Active.id) "الغاء التفعيل"
+                        else "تفعيل",
+                        fontSize = 16.sp
+                    )
+                }
             }
+            ShowItems(selectedIndex,
+                selectedApplications,
+                applicationsList,
+                onClick = {
+                    onNavigate(APPLICATION_DETAILS, it)
+                })
         }
     }
 
     if (showDataOfExile.value) {
-        Dialog(properties = DialogProperties(false, false), onDismissRequest = {
+        Dialog(properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        ), onDismissRequest = {
             showDataOfExile.value = false
         }) {
             Card(
@@ -219,40 +263,104 @@ fun AllApplicationsScreen(
             }
         }
     }
+
+    if (showDetermineApplicationsInfoDialog.value) {
+        Dialog(properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        ), onDismissRequest = {
+            showDetermineApplicationsInfoDialog.value = false
+        }) {
+            DetermineApplicationsInfoDialog(
+                onClickConfirm = { zone, classes, not ->
+                    viewModel.updateData(selectedApplications.map {
+                        it.copy(
+                            isApproved = true, zoneID = zone,
+                            className = classes,
+                            note = not
+                        )
+                    }, 0)
+                    selectedIndex.value = 0
+                    showDataOfExile.value = false
+                    showDetermineApplicationsInfoDialog.value = false
+                    selectedApplications.clear()
+                    viewModel.getApplications()
+                    Toast.makeText(context, "تم حفظ البيانات", Toast.LENGTH_LONG).show()
+                },
+                onClickCancel = {
+                    showDetermineApplicationsInfoDialog.value = false
+                })
+        }
+    }
 }
 
 @Composable
 fun ShowItems(
+    selectable: MutableState<Int>,
+    selectedItems: SnapshotStateList<ApplicationPojo>,
     applicationsList: SnapshotStateList<ApplicationPojo>,
-    onClick: ((nationalID: String) -> Unit)? = null
+    onClick: (nationalID: String) -> Unit,
+) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.padding(
+            top = 5.dp,
+            end = 10.dp,
+            start = 10.dp, bottom = 10.dp
+        )
+    ) {
+        items(applicationsList) {
+            ApplicationItem(
+                selectable = selectable.value == ApplicationsType.Active.id ||
+                        selectable.value == ApplicationsType.DisActive.id, applicationPojo = it,
+                selectedApplications = selectedItems,
+                onLongClick = onClick
+            )
+        }
+    }
+}
+
+
+@Composable
+fun ShowItems(
+    applicationsList: SnapshotStateList<ApplicationPojo>,
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.padding(top = 5.dp, end = 10.dp, start = 10.dp, bottom = 10.dp)
     ) {
         items(applicationsList) {
-            ApplicationItem(it) {
-                if (onClick != null) {
-                    onClick(it.nationalID ?: "")
-                }
-            }
+            ApplicationItem(selectable = false, applicationPojo = it)
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ApplicationItem(
     applicationPojo: ApplicationPojo,
-    onClick: () -> Unit
+    selectable: Boolean = false,
+    onLongClick: ((nationalID: String) -> Unit)? = null,
+    selectedApplications: SnapshotStateList<ApplicationPojo>? = null,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
-            .clickable {
-                onClick()
-            },
-        backgroundColor = Color.White,
+            .combinedClickable(
+                onClick = {
+                    if (selectedApplications?.contains(applicationPojo) == true)
+                        selectedApplications.remove(applicationPojo)
+                    else
+                        selectedApplications?.add(applicationPojo)
+
+                },
+                onLongClick = {
+                    if (onLongClick != null) {
+                        onLongClick(applicationPojo.nationalID ?: "")
+                    }
+                }),
+        backgroundColor = if (selectable && selectedApplications?.contains(applicationPojo) == true) SelectItemColor else Color.White,
         elevation = 10.dp,
         shape = RoundedCornerShape(8.dp)
     ) {
@@ -277,7 +385,8 @@ fun ApplicationItem(
 @Composable
 fun CustomTabs(
     viewModel: AllApplicationViewModel = hiltViewModel(),
-    selectedIndex: MutableState<Int>
+    selectedIndex: MutableState<Int>,
+    selectedItems: SnapshotStateList<ApplicationPojo>
 ) {
 
     TabRow(
@@ -299,6 +408,7 @@ fun CustomTabs(
                     ),
                 selected = selected,
                 onClick = {
+                    selectedItems.clear()
                     selectedIndex.value = index
                     viewModel.getApplications(type)
                 },
@@ -308,8 +418,104 @@ fun CustomTabs(
     }
 }
 
+
+@Composable
+fun DetermineApplicationsInfoDialog(
+    onClickConfirm: (zoneID: Int, classes: String, note: String) -> Unit,
+    onClickCancel: () -> Unit,
+    viewModel: AllApplicationViewModel = hiltViewModel()
+) {
+    val selectedZone = remember {
+        mutableStateOf(0)
+    }
+
+    val selectedClass = remember {
+        mutableStateOf(0)
+    }
+
+    val note = remember {
+        mutableStateOf("")
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        shape = RoundedCornerShape(8.dp),
+        backgroundColor = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)
+        ) {
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(text = "من فضلك اختر الاعدادات التي سوف تطبق علي جميع الطلبات ")
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            SampleSpinner(
+                "المنطقه",
+                list = viewModel.stateZones.value.data?.mapNotNull { it.zoneName } ?: ArrayList(),
+                selectedZone.value
+            ) {
+                selectedZone.value = it
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+
+            SampleSpinner(
+                "الفئه", list = viewModel.stateClasses.value.data?.mapNotNull {
+                    it.className
+                } ?: kotlin.collections.ArrayList(), selectedClass.value
+            ) {
+                selectedClass.value = it
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            CustomTextFile(data = note, title = "كتابة ملاحظات")
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(Modifier.fillMaxWidth()) {
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(end = 10.dp),
+                    onClick = {
+                        onClickConfirm(
+                            viewModel.stateZones.value.data?.getOrNull(selectedZone.value)?.zoneID
+                                ?: 0,
+                            viewModel.stateClasses.value.data?.getOrNull(selectedClass.value)?.className
+                                ?: "",
+                            note.value
+                        )
+                    }
+                ) {
+                    Text(
+                        text = "ارسال", fontSize = 16.sp
+                    )
+                }
+
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(start = 10.dp),
+                    onClick = onClickCancel
+                ) {
+                    Text(
+                        text = "الغاء", fontSize = 16.sp
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+    }
+}
+
 enum class ApplicationsType(val id: Int, val title: String) {
-    All(2, "الكل"), Active(0, "مفعلة"), DisActive(1, "غير مفعلة"), Attended(2, "حاضرون")
+    All(0, "الكل"), Active(1, "مفعلة"), DisActive(2, "غير مفعلة"), Attended(3, "حاضرون")
 }
 
 

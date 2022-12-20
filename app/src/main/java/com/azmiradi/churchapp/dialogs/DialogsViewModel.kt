@@ -4,7 +4,14 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.azmiradi.churchapp.DataState
+import com.azmiradi.churchapp.FirebaseConstants
+import com.azmiradi.churchapp.all_applications.ApplicationPojo
+import com.azmiradi.churchapp.application_details.Classes
+import com.azmiradi.churchapp.application_details.Zone
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -23,8 +30,44 @@ class DialogsViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun resetView(){
+    fun <T> addList(t: T, root: String) {
+        _addState.value = DataState(isLoading = true)
+        val database = FirebaseDatabase.getInstance().reference.child(root)
+        database.setValue(t).addOnCompleteListener {
+            _addState.value = DataState(data = true)
+        }.addOnFailureListener {
+            _addState.value = DataState(error = it.message.toString())
+        }
+    }
+
+    private val _stateZones = mutableStateOf(DataState<List<Zone>>())
+    val stateZones: State<DataState<List<Zone>>> = _stateZones
+
+    fun getAllZones() {
+        _stateZones.value = DataState(isLoading = true)
+        FirebaseDatabase.getInstance().reference
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val zoneList: MutableList<Zone> = ArrayList()
+
+                    for (data in snapshot.child(FirebaseConstants.ZONE).children) {
+                        data.getValue(Zone::class.java)?.let {
+                             zoneList.add(it)
+                        }
+                    }
+                    _stateZones.value = DataState(data = zoneList)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _stateZones.value = DataState(error = error.message)
+                }
+
+            })
+    }
+
+    fun resetView() {
         _addState.value = DataState()
+        _stateZones.value = DataState()
     }
 
 

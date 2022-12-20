@@ -5,4 +5,5 @@ object FirebaseConstants {
     const val ZONE="zone"
     const val CLASSES="classes"
 
-}
+
+ }

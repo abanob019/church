@@ -65,7 +65,6 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
 
                         for (data in snapshot.child(ZONE).children) {
                             data.getValue(Zone::class.java)?.let {
-                                it.zoneID = data.key
                                 zoneList.add(it)
                             }
                         }
@@ -93,11 +92,11 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
             }
     }
 
-    fun sendMail(mailTo: String, file: File) {
+    fun sendMail(mailTo: String, file: File? = null) {
         _stateSendMail.value = DataState(isLoading = true)
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val from = "azmiradi97@gmail.com"
+                val from = "christmas.copticchurch@gmail.com"
                 val host = "smtp.gmail.com"
                 val properties = System.getProperties()
                 properties["mail.smtp.host"] = host
@@ -106,38 +105,80 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
                 properties["mail.smtp.auth"] = "true"
                 val session = Session.getInstance(properties, object : Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication("azmiradi97@gmail.com", "hgqmsfzyooefobla")
+                        return PasswordAuthentication(
+                            "christmas.copticchurch@gmail.com",
+                            "ctcdtqvmxpekarac"
+                        )
                     }
                 })
-                //session.setDebug(true);
+                session.setDebug(true);
                 val message = MimeMessage(session)
                 message.setFrom(InternetAddress(from))
                 message.addRecipient(Message.RecipientType.TO, InternetAddress(mailTo))
-                message.subject = "الكنيسة القبطية الارثوذكسية - دعوة قداس عيد الميلا المجيد 2023"
+                message.subject =
+                    "الكنيسة القبطية الارثوذكسية - دعوة حضور قداس عيد الميلاد المجيد 2023"
                 val multipart: Multipart = MimeMultipart()
-                val attachmentPart = MimeBodyPart()
-                val textPart = MimeBodyPart()
 
-                try {
-                    attachmentPart.attachFile(file)
-                    textPart.setText(
-                        " نبلغ سيادتكم بانه تم تفعيل الدعوه الخاصه بكم \n" +
-                                "مرفق لكم صور من الـ 'QRCode' الخاص بدعوة سيادتكم برجاء تقديمه لمن يطلب اثناء الدخول لمساعدتكم \n " +
-                                "كل سنه وانتم بكل خير " +
-                                "\n" +
-                                "عيد الميلاد المجيد 2023", StandardCharsets.UTF_8.name()
-                    )
+                if (file == null) {
+                    //val attachmentPart = MimeBodyPart()
+                    val textPart = MimeBodyPart()
 
-                    multipart.addBodyPart(textPart)
-                    multipart.addBodyPart(attachmentPart)
-                } catch (e: IOException) {
-                    e.printStackTrace()
+                    try {
+                        //  attachmentPart.attachFile(file)
+                        textPart.setText(
+                            "بكل التقدير نشكر سيادتكم لطلب دعوة حضور قداس عيد الميلاد المجيد ٢٠٢٣. " +
+                                    "\n" +
+                                    " ونحيط سيادتكم علماً بانه تم استلام بياناتكم وجاري العمل علي إصدار الدعوة الخاصه بكم" +
+                                    "\n" +
+                                    " سيتم التواصل مع سيادتكم بعد يوم ١ يناير ٢٠٢٣ من خلال رقم واتساب 01206019170 بشأن استلام الدعوة"
+                                    + "\n"
+                                    + "كل عام وحضراتكم بخير"
+                                    + "\n" +
+                                    "لجنة الدعوات.", StandardCharsets.UTF_8.name()
+                        )
+
+                        multipart.addBodyPart(textPart)
+                        //multipart.addBodyPart(attachmentPart)
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                        println("Email : "+ mailTo + " : " + e.message)
+
+                    }
+                } else {
+                    val attachmentPart = MimeBodyPart()
+                    val textPart = MimeBodyPart()
+
+                    try {
+                        attachmentPart.attachFile(file)
+                        textPart.setText(
+                            "بكل التقدير نشكر سيادتكم لطلب دعوة حضور قداس عيد الميلاد المجيد ٢٠٢٣. " +
+                                    "\n" +
+                                    " ونحيط سيادتكم علماً بانه تم تفعيل الدعوة" +
+                                    "\n" +
+                                    " مرفق لسيادتكم رمز 'QRCode' برجاء الاحتفاظ به وتقديمه عند الطلب في الكاتدرائية"
+                                    + "\n"
+                                    + "كل عام وحضراتكم بخير"
+                                    + "\n" +
+                                    "لجنة الدعوات.", StandardCharsets.UTF_8.name()
+                        )
+
+                        multipart.addBodyPart(textPart)
+                        multipart.addBodyPart(attachmentPart)
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                        println("Email : "+ mailTo + " : " + e.message)
+
+                    }
                 }
+
                 message.setContent(multipart)
                 Transport.send(message)
                 _stateSendMail.value = DataState(data = true)
+                println("Email : "+ mailTo + " : ")
 
             } catch (e: Throwable) {
+                println("Email : "+ mailTo + " : "+ e.message)
+
                 _stateSendMail.value = DataState(error = e.message ?: "Something worrying")
             }
 

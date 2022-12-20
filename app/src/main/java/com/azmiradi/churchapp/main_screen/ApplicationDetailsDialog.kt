@@ -147,7 +147,7 @@ fun ApplicationDetailsDialog(
                 CustomText(value = classes[selectedZone.value].className ?: "----", title = "الفئة")
             CustomText(value = applicationPojo?.note ?: "----", title = "ملاحظات")
             CustomText(value = applicationPojo?.email ?: "----", title = "البريد")
-            if (applicationPojo?.isApproved == true){
+            if (applicationPojo?.isApproved == true) {
                 Row(Modifier.fillMaxWidth()) {
                     Button(modifier = Modifier
                         .fillMaxWidth()
@@ -174,6 +174,39 @@ fun ApplicationDetailsDialog(
                         )
                     }
                 }
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+
+@Composable
+fun ApplicationDetailsDialog(data: String, color: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        backgroundColor = Color.White
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(end = 20.dp, start = 20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Text(text = data)
+
+            val color = remember {
+                android.graphics.Color.parseColor("#$color")
+            }
+            Card(
+                modifier = Modifier.size(100.dp),
+                backgroundColor = Color(color)
+            ) {
+
             }
             Spacer(modifier = Modifier.height(20.dp))
         }

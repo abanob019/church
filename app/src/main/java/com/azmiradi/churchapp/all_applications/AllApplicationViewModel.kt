@@ -4,7 +4,10 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.azmiradi.churchapp.DataState
+import com.azmiradi.churchapp.FirebaseConstants
 import com.azmiradi.churchapp.FirebaseConstants.APPLICATIONS
+import com.azmiradi.churchapp.application_details.Classes
+import com.azmiradi.churchapp.application_details.Zone
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -16,20 +19,46 @@ import javax.inject.Inject
 class AllApplicationViewModel @Inject constructor() : ViewModel() {
     private val _stateApplications = mutableStateOf(DataState<List<ApplicationPojo>>())
     val stateApplications: State<DataState<List<ApplicationPojo>>> = _stateApplications
+
+    private val _stateZones = mutableStateOf(DataState<List<Zone>>())
+    val stateZones: State<DataState<List<Zone>>> = _stateZones
+
+    private val _stateClasses = mutableStateOf(DataState<List<Classes>>())
+    val stateClasses: State<DataState<List<Classes>>> = _stateClasses
+
     var allApplications: List<ApplicationPojo> = ArrayList()
+
     fun getApplications() {
         _stateApplications.value = DataState(isLoading = true)
-        FirebaseDatabase.getInstance().reference.child(APPLICATIONS)
+        FirebaseDatabase.getInstance().reference
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val dataList: MutableList<ApplicationPojo> = ArrayList()
-                    for (dataSnap in snapshot.children) {
+                    val zoneList: MutableList<Zone> = ArrayList()
+                    val classesList: MutableList<Classes> = ArrayList()
+
+                    for (dataSnap in snapshot.child(APPLICATIONS).children) {
                         dataSnap.getValue(ApplicationPojo::class.java)?.let {
                             dataList.add(it)
                         }
                     }
+
+                    for (data in snapshot.child(FirebaseConstants.CLASSES).children) {
+                        data.getValue(Classes::class.java)?.let {
+                            classesList.add(it)
+                        }
+                    }
+
+                    for (data in snapshot.child(FirebaseConstants.ZONE).children) {
+                        data.getValue(Zone::class.java)?.let {
+                             zoneList.add(it)
+                        }
+                    }
+
                     allApplications = dataList
                     _stateApplications.value = DataState(data = dataList)
+                    _stateClasses.value = DataState(data = classesList)
+                    _stateZones.value = DataState(data = zoneList)
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -76,7 +105,7 @@ class AllApplicationViewModel @Inject constructor() : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     if (index == (toList.size - 1)) {
-                        _stateUpdateData.value = DataState(data = true)
+                         _stateUpdateData.value = DataState(data = true)
                     } else {
                         updateData(toList, index + 1)
                     }
