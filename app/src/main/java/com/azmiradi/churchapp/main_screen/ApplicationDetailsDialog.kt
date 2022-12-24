@@ -87,7 +87,7 @@ fun ApplicationDetailsDialog(
             }
 
             data?.zone?.forEachIndexed { index, data ->
-                if (data.zoneID == applicationPojo?.zoneID) {
+                if (data.zoneName == applicationPojo?.zoneID) {
                     selectedZone.value = index
                 }
             }

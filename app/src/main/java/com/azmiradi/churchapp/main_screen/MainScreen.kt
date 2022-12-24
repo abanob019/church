@@ -49,7 +49,7 @@ fun MainScreen(
         mutableStateOf(false)
     }
 
-    val detailsDialogOffline= rememberSaveable() {
+    val detailsDialogOffline = rememberSaveable() {
         mutableStateOf(false)
     }
 
@@ -64,16 +64,16 @@ fun MainScreen(
     val scanQrCodeLauncher = rememberLauncherForActivityResult(ScanQRCode()) { result ->
         when (result) {
             is QRResult.QRSuccess -> {
-                if (isOffline.value)
-                {
-                    detailsDialogOffline.value=true
-                    qrData.value=result.content.rawValue
-                }else {
-                    val nationalId = result.content.rawValue.split("\n")[2].split(":")[1].trim()
-                    scannedID.value = nationalId
-                    detailsDialog.value = true
-                    allScannedData.value = result.content.rawValue
-                }
+                println("result.content.rawValue::: "+result.content.rawValue)
+//                if (isOffline.value) {
+//                    detailsDialogOffline.value = true
+//                    qrData.value = result.content.rawValue
+//                } else {
+//                    val nationalId = result.content.rawValue.split("\n")[2].trim()
+//                    scannedID.value = nationalId
+//                    detailsDialog.value = true
+//                    allScannedData.value = result.content.rawValue
+//                }
             }
 
             is QRResult.QRError -> {
@@ -114,7 +114,7 @@ fun MainScreen(
                 .fillMaxWidth()
                 .padding(end = 50.dp, start = 50.dp),
                 onClick = {
-                    isOffline.value=false
+                    isOffline.value = false
                     scanQrCodeLauncher.launch(null)
                 }) {
                 Text(
@@ -150,7 +150,7 @@ fun MainScreen(
                 .fillMaxWidth()
                 .padding(end = 50.dp, start = 50.dp),
                 onClick = {
-                    isOffline.value=true
+                    isOffline.value = true
                     scanQrCodeLauncher.launch(null)
                 }) {
                 Text(text = "فحص اوفلاين", fontSize = 16.sp)
@@ -191,7 +191,7 @@ fun MainScreen(
             detailsDialog.value = false
         }) {
             val color = qrData.value.split("\n")[6].trim()
-            ApplicationDetailsDialog(data = qrData.value, color =color )
+            ApplicationDetailsDialog(data = qrData.value, color = color)
         }
     }
 }

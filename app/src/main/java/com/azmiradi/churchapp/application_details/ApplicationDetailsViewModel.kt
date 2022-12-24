@@ -141,7 +141,7 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
                         //multipart.addBodyPart(attachmentPart)
                     } catch (e: IOException) {
                         e.printStackTrace()
-                        println("Email : "+ mailTo + " : " + e.message)
+                        println("Email : " + mailTo + " : " + e.message)
 
                     }
                 } else {
@@ -150,23 +150,22 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
 
                     try {
                         attachmentPart.attachFile(file)
+                        val message = "كل عام وانتم بخير" +
+                                "\n" +
+                                "مرحباً بكم في قداس عيد الميلاد المجيد بكاتدرائية ميلاد المسيح بالعاصمة الادارية الجديده" +
+                                "\n" +
+                                " ضرورة تقديم الدعوة الورقية مع الدعوة الالكترونية عند الدخول ولن يعتد باحدهما دون الاخري" +
+                                "\n" +
+                                "عيد سعيد"
                         textPart.setText(
-                            "بكل التقدير نشكر سيادتكم لطلب دعوة حضور قداس عيد الميلاد المجيد ٢٠٢٣. " +
-                                    "\n" +
-                                    " ونحيط سيادتكم علماً بانه تم تفعيل الدعوة" +
-                                    "\n" +
-                                    " مرفق لسيادتكم رمز 'QRCode' برجاء الاحتفاظ به وتقديمه عند الطلب في الكاتدرائية"
-                                    + "\n"
-                                    + "كل عام وحضراتكم بخير"
-                                    + "\n" +
-                                    "لجنة الدعوات.", StandardCharsets.UTF_8.name()
+                            message, StandardCharsets.UTF_8.name()
                         )
 
                         multipart.addBodyPart(textPart)
                         multipart.addBodyPart(attachmentPart)
                     } catch (e: IOException) {
                         e.printStackTrace()
-                        println("Email : "+ mailTo + " : " + e.message)
+                        println("Email : " + mailTo + " : " + e.message)
 
                     }
                 }
@@ -174,16 +173,22 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
                 message.setContent(multipart)
                 Transport.send(message)
                 _stateSendMail.value = DataState(data = true)
-                println("Email : "+ mailTo + " : ")
+                println("Email : " + mailTo + " : ")
 
             } catch (e: Throwable) {
-                println("Email : "+ mailTo + " : "+ e.message)
+                println("Email : " + mailTo + " : " + e.message)
 
                 _stateSendMail.value = DataState(error = e.message ?: "Something worrying")
             }
 
         }
 
+    }
+
+    fun resetViewModel() {
+        _stateUpdateApplication.value = DataState()
+        _stateSendMail.value = DataState()
+        _stateApplicationDetails.value = DataState()
     }
 
 

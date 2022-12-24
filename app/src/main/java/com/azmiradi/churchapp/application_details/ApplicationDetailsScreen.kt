@@ -2,13 +2,16 @@ package com.azmiradi.churchapp.application_details
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
+import android.database.Cursor
 import android.graphics.Bitmap
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
+import androidmads.library.qrgenearator.QRGContents
+import androidmads.library.qrgenearator.QRGEncoder
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,22 +31,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azmiradi.churchapp.ProgressBar
-import com.azmiradi.churchapp.R
 import com.azmiradi.churchapp.RealPathUtil
 import com.azmiradi.churchapp.all_applications.ApplicationPojo
-import com.github.alexzhirkevich.customqrgenerator.QrCodeGenerator
-import com.github.alexzhirkevich.customqrgenerator.QrData
-import com.github.alexzhirkevich.customqrgenerator.QrOptions
-import com.github.alexzhirkevich.customqrgenerator.style.*
 import com.izettle.html2bitmap.Html2Bitmap
 import com.izettle.html2bitmap.content.WebViewContent.html
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.InputStream
-import java.nio.charset.StandardCharsets
 
 
 @Composable
@@ -52,6 +50,24 @@ fun ApplicationDetailsScreen(
     onNavigation: (destination: String) -> Unit,
     viewModel: ApplicationDetailsViewModel = hiltViewModel()
 ) {
+    val listOfEmployer = remember {
+        listOf(
+            "مجلس النواب",
+            "مجلس الشيوخ",
+            "هيئات قضائية",
+            "بعثات دبلوماسية",
+            "جامعات",
+            "مجالس قومية",
+            "هيئات حكومية",
+            "بنوك وهيئات اقتصادية",
+            "صحافة واعلام",
+            "نقابات",
+            "احزاب وائتلافات",
+            "جمعيات اهلية",
+            "رجال اعمال",
+            "اخري"
+        )
+    }
     LaunchedEffect(Unit) {
         viewModel.getApplicationDetails(applicationID)
     }
@@ -108,8 +124,26 @@ fun ApplicationDetailsScreen(
         mutableStateOf("")
     }
 
-    val qrImage = remember {
+    val invitationBitmap = remember {
         mutableStateOf<Bitmap?>(null)
+    }
+    val title = remember {
+        mutableStateOf("")
+    }
+    val name = remember {
+        mutableStateOf("")
+    }
+    val jobTitle = remember {
+        mutableStateOf("")
+    }
+    val nationalID = remember {
+        mutableStateOf("")
+    }
+    val employer = remember {
+        mutableStateOf(0)
+    }
+    val phone = remember {
+        mutableStateOf("")
     }
     val coroutineScope = rememberCoroutineScope()
     state.data?.let {
@@ -130,7 +164,7 @@ fun ApplicationDetailsScreen(
             }
 
             data?.zone?.forEachIndexed { index, data ->
-                if (data.zoneID == applicationPojo?.zoneID) {
+                if (data.zoneName == applicationPojo?.zoneID) {
                     selectedZone.value = index
                 }
             }
@@ -140,16 +174,30 @@ fun ApplicationDetailsScreen(
             row.value = applicationPojo?.row ?: ""
 
             char.value = applicationPojo?.chare ?: ""
-
             priority.value = (applicationPojo?.priority ?: 0).toString()
+
+            title.value = applicationPojo?.title ?: ""
+            name.value = applicationPojo?.name ?: ""
+            jobTitle.value = applicationPojo?.jobTitle ?: ""
+            nationalID.value = applicationPojo?.nationalID ?: ""
+            phone.value = applicationPojo?.phone ?: ""
+
+            applicationPojo?.employer?.let {
+                println("jobTitle: : " + it)
+                employer.value = listOfEmployer.indexOf(it)
+            }
 
             if (applicationPojo?.isApproved == true) {
                 coroutineScope.launch(Dispatchers.IO) {
-                    qrImage.value =
-                        context.createQRCode(
-                            applicationPojo,
-                            zone = zones.getOrNull(selectedZone.value)
-                        )
+                    val invitation = context.prepareQRWWithInvitation(
+                        applicationPojo,
+                        zones.getOrNull(selectedZone.value)
+                    ) {
+                        coroutineScope.launch(Dispatchers.Main) {
+                            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    invitationBitmap.value = invitation
                 }
             }
         }
@@ -158,12 +206,17 @@ fun ApplicationDetailsScreen(
 
     updateState.data?.let {
         LaunchedEffect(Unit) {
-            coroutineScope.launch(Dispatchers.IO) {
-                qrImage.value = context.createQRCode(
-                    applicationPojo = applicationPojo, zone = zones.getOrNull(selectedZone.value)
-                )
-            }
             Toast.makeText(context, "تم تحديث البيانات", Toast.LENGTH_LONG).show()
+            invitationBitmap.value = null
+            viewModel.resetViewModel()
+            viewModel.getApplicationDetails(nationalID = applicationID)
+//            coroutineScope.launch(Dispatchers.IO) {
+//                val invitation = context.prepareQRWWithInvitation(
+//                    applicationPojo,
+//                    zones.getOrNull(selectedZone.value)
+//                )
+//                invitationBitmap.value = invitation
+//            }
         }
     }
 
@@ -174,6 +227,7 @@ fun ApplicationDetailsScreen(
             Toast.makeText(context, "تم ارسال الدعوه علي الايميل", Toast.LENGTH_LONG).show()
         }
     }
+
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -188,14 +242,28 @@ fun ApplicationDetailsScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.height(20.dp))
-            CustomText(value = applicationPojo?.title ?: "----", title = "اللقب")
-            CustomText(value = applicationPojo?.name ?: "----", title = "الاسم")
-            CustomText(value = applicationPojo?.jobTitle ?: "----", title = "المسمي الوظيفي")
-            CustomText(value = applicationPojo?.nationalID ?: "----", title = "الرقم القومي")
-            CustomText(value = applicationPojo?.phone ?: "----", title = "رقم الهاتف")
-            CustomText(value = applicationPojo?.employer ?: "----", title = "الجهة")
+            CustomTextFile(data = title, title = "اللقب", keyboard = KeyboardType.Text)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            CustomTextFile(data = name, title = "الاسم", keyboard = KeyboardType.Text)
+            Spacer(modifier = Modifier.height(10.dp))
+
+
+            CustomTextFile(data = jobTitle, title = "المسمي الوظيفي", keyboard = KeyboardType.Text)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            CustomTextFile(data = nationalID, title = "الرقم القومي", keyboard = KeyboardType.Text)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            CustomTextFile(data = phone, title = "رقم الهاتف", keyboard = KeyboardType.Text)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            SampleSpinner(
+                "الجهة", list = listOfEmployer, employer.value
+            ) {
+                employer.value = it
+            }
             Spacer(modifier = Modifier.height(10.dp))
             CustomTextFile(data = priority, title = "الاولوية", keyboard = KeyboardType.Decimal)
             Spacer(modifier = Modifier.height(10.dp))
@@ -228,7 +296,7 @@ fun ApplicationDetailsScreen(
             if (applicationPojo?.isApproved == true) {
                 Spacer(modifier = Modifier.height(10.dp))
 
-                qrImage.value?.asImageBitmap()?.let {
+                invitationBitmap.value?.asImageBitmap()?.let {
                     Image(bitmap = it, contentDescription = "")
                 }
 
@@ -236,22 +304,26 @@ fun ApplicationDetailsScreen(
                     Button(modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .padding(end = 10.dp),
+                        .padding(start = 10.dp),
                         onClick = {
-                            val url = qrImage.value?.saveBitmap(
-                                applicationPojo?.name + "_" + applicationPojo?.phone, context
-                            )
-
-                            Toast.makeText(context, "تم الحفظ", Toast.LENGTH_LONG).show()
-                            coroutineScope.launch(Dispatchers.IO) {
-                                context.prepareInvitation(
-                                    applicationName = applicationPojo?.name ?: "", url.toString()
-                                )
-                                    ?.saveBitmap("Azmi", context)
-                            }
+                            applicationPojo?.zoneID = zones.getOrNull(selectedZone.value)?.zoneName
+                            applicationPojo?.isApproved = true
+                            applicationPojo?.note = note.value
+                            applicationPojo?.className =
+                                classes.getOrNull(selectedClass.value)?.className
+                            applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
+                            applicationPojo?.title = title.value
+                            applicationPojo?.name = name.value
+                            applicationPojo?.nationalID = nationalID.value
+                            applicationPojo?.jobTitle = jobTitle.value
+                            applicationPojo?.phone = phone.value
+                            applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
+                            applicationPojo?.chare = char.value
+                            applicationPojo?.row = row.value
+                            applicationPojo?.let { viewModel.updateApplication(it) }
                         }) {
                         Text(
-                            text = "حفظ ال QR", fontSize = 16.sp
+                            text = "تحديث البيانات", fontSize = 16.sp
                         )
                     }
 
@@ -260,18 +332,24 @@ fun ApplicationDetailsScreen(
                         .weight(1f)
                         .padding(start = 10.dp),
                         onClick = {
-                            applicationPojo?.zoneID = zones.getOrNull(selectedZone.value)?.zoneID
-                            applicationPojo?.isApproved = true
+                            applicationPojo?.zoneID = zones.getOrNull(selectedZone.value)?.zoneName
+                            applicationPojo?.isApproved = false
                             applicationPojo?.note = note.value
-                            applicationPojo?.chare = char.value
-                            applicationPojo?.row = row.value
-                            applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
                             applicationPojo?.className =
                                 classes.getOrNull(selectedClass.value)?.className
+                            applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
+                            applicationPojo?.title = title.value
+                            applicationPojo?.name = name.value
+                            applicationPojo?.nationalID = nationalID.value
+                            applicationPojo?.jobTitle = jobTitle.value
+                            applicationPojo?.phone = phone.value
+                            applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
+                            applicationPojo?.chare = char.value
+                            applicationPojo?.row = row.value
                             applicationPojo?.let { viewModel.updateApplication(it) }
                         }) {
                         Text(
-                            text = "تحديث البيانات", fontSize = 16.sp
+                            text = "الغاء تفعيل الدعوة", fontSize = 16.sp
                         )
                     }
                 }
@@ -283,9 +361,16 @@ fun ApplicationDetailsScreen(
                         .weight(1f)
                         .padding(end = 10.dp),
                         onClick = {
-                            val image = qrImage.value?.saveBitmap(
+                            val image = invitationBitmap.value?.saveBitmap(
+                                "/Invitations/Invitations",
                                 applicationPojo?.name + "_" + applicationPojo?.phone, context
-                            )
+                            ) {
+                                Toast.makeText(
+                                    context,
+                                    "فشل حفظ الدعوه لارسالها",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
                             image?.let {
                                 viewModel.sendMail(
                                     applicationPojo?.email ?: "",
@@ -294,7 +379,7 @@ fun ApplicationDetailsScreen(
                             }
 
                         }) {
-                        Text(text = "Email Invitation", fontSize = 16.sp)
+                        Text(text = "Email", fontSize = 16.sp)
                     }
 
                     Button(modifier = Modifier
@@ -302,21 +387,36 @@ fun ApplicationDetailsScreen(
                         .weight(1f)
                         .padding(start = 10.dp),
                         onClick = {
-
+                            invitationBitmap.value?.let {
+                                context.sendInvitationViaWhatsApp(
+                                    it,
+                                    applicationPojo?.phone.toString()
+                                )
+                            }
                         }) {
                         Text(
-                            text = "Whatsapp Invitation", fontSize = 16.sp
+                            text = "Whatsapp", fontSize = 16.sp
                         )
                     }
                 }
             } else {
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                    applicationPojo?.zoneID = zones.getOrNull(selectedZone.value)?.zoneID
+                    applicationPojo?.zoneID = zones.getOrNull(selectedZone.value)?.zoneName
                     applicationPojo?.isApproved = true
                     applicationPojo?.note = note.value
                     applicationPojo?.className = classes.getOrNull(selectedClass.value)?.className
+                    applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
+                    applicationPojo?.title = title.value
+                    applicationPojo?.name = name.value
+                    applicationPojo?.nationalID = nationalID.value
+                    applicationPojo?.jobTitle = jobTitle.value
+                    applicationPojo?.phone = phone.value
+                    applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
+                    applicationPojo?.chare = char.value
+                    applicationPojo?.row = row.value
                     applicationPojo?.let { viewModel.updateApplication(it) }
+                    viewModel.sendMail(applicationPojo?.email ?: "", null)
                 }) {
                     Text(
                         text = "الموافق علي الدعوه", fontSize = 16.sp
@@ -328,6 +428,63 @@ fun ApplicationDetailsScreen(
     }
 }
 
+private fun Context.sendInvitationViaWhatsApp(imgUri: Bitmap, phone: String) {
+    val path: String =
+        MediaStore.Images.Media.insertImage(contentResolver, imgUri, "Image Description", null)
+    val uri = Uri.parse(path)
+
+    val whatsAppLink = "2$phone@s.whatsapp.net"
+    val message = "كل عام وانتم بخير" +
+            "\n" +
+            "مرحباً بكم في قداس عيد الميلاد المجيد بكاتدرائية ميلاد المسيح بالعاصمة الادارية الجديده" +
+            "\n" +
+            " ضرورة تقديم الدعوة الورقية مع الدعوة الالكترونية عند الدخول ولن يعتد باحدهما دون الاخري" +
+            "\n" +
+            "عيد سعيد"
+    val sendIntent = Intent(Intent.ACTION_SEND)
+    sendIntent.type = "text/plain"
+    sendIntent.putExtra(Intent.EXTRA_TEXT, message)
+    sendIntent.putExtra(Intent.EXTRA_STREAM, uri)
+    sendIntent.type = "image/jpeg"
+    sendIntent.putExtra("jid", whatsAppLink)
+    sendIntent.setPackage("com.whatsapp")
+    startActivity(sendIntent)
+}
+
+fun Context.prepareQRWWithInvitation(
+    applicationPojo: ApplicationPojo?,
+    zone: Zone?,
+    onError: (String) -> Unit
+): Bitmap? {
+    applicationPojo?.let {
+        val qrBitmap = createQRCode(
+            applicationPojo,
+            zone = zone,
+            withColor = true
+        )
+        val qrUri = qrBitmap.saveBitmap(
+            folder = "/Invitations/ColorsQRs",
+            (applicationPojo.name ?: "") + "_" + (applicationPojo.phone ?: ""), this
+        ) {
+            onError(it)
+        }
+        qrUri?.let {
+            val invitationBitmap = prepareInvitation(
+                (applicationPojo.title ?: " ") + " " + (applicationPojo.name ?: ""),
+                it.toString()
+            )
+            invitationBitmap?.saveBitmap(
+                "/Invitations/Invitations",
+                (applicationPojo.name ?: "") + "_" + (applicationPojo.phone ?: ""), this
+            ) { error ->
+                onError(error)
+            }
+            return invitationBitmap
+        }
+    }
+    return null
+}
+
 fun Context.prepareInvitation(applicationName: String, qrImage: String): Bitmap? {
     val inputStream: InputStream = assets.open("invitation.html")
     val size = inputStream.available()
@@ -337,48 +494,54 @@ fun Context.prepareInvitation(applicationName: String, qrImage: String): Bitmap?
     inputStream.close()
 
     val html = String(buffer)
-  val fullImage=  html.replace("APPLICATION_NAME", applicationName)
+    val fullImage = html.replace("APPLICATION_NAME", applicationName)
         .replace("QR_IMAGE", qrImage)
-    return Html2Bitmap.Builder().setContext(this).setBitmapWidth(1182).setContent(html(fullImage)).build().bitmap
+    return Html2Bitmap.Builder().setContext(this).setBitmapWidth(1182).setContent(html(fullImage))
+        .build().bitmap
 }
 
-fun Context.createQRCode(applicationPojo: ApplicationPojo?, zone: Zone?): Bitmap {
-    val data = java.lang.StringBuilder("قداس عيد الميلاد المجيد 2023").append("\n")
+
+fun createQRCode(
+    applicationPojo: ApplicationPojo?,
+    zone: Zone?,
+    withColor: Boolean
+): Bitmap {
+    val data = java.lang.StringBuilder("عيد الميلاد  2023").append("\n")
         .append(applicationPojo?.title + " : " + applicationPojo?.name).append("\n")
-        .append("الرقم القومي: ").append(applicationPojo?.nationalID).append("\n")
-        .append(applicationPojo?.jobTitle).append("\n")
+        .append(applicationPojo?.nationalID).append("\n")
         .append(zone?.zoneName ?: "").append(" - ").append(applicationPojo?.row ?: "").append(" - ")
         .append(applicationPojo?.chare ?: "").append("\n")
         .append(applicationPojo?.employer)
         .append("\n").append(zone?.zoneColor ?: "")
 
-    val cd = ColorDrawable(-0x999a)
+//    val options = QrOptions.Builder(115)
+//        .setColors(
+//        QrColors(
+//            dark = QrColor.Solid(getColor(R.color.black)),
+//            highlighting = QrColor.Solid(0xddffffff.toColor()),
+//        )
+//    ).setElementsShapes(
+//        QrElementsShapes(
+//            darkPixel = QrPixelShape.RoundCorners(),
+//            ball = QrBallShape.RoundCorners(.25f),
+//            frame = QrFrameShape.RoundCorners(.25f),
+//        )
+//    ).setPadding(0f).build()
+//
+//    val generator = QrCodeGenerator(this)
+//    return generator.generateQrCode(
+//        QrData.Text(data.toString()), options, StandardCharsets.UTF_8
+//    )
 
-    val options = QrOptions.Builder(1024).setPadding(.3f).setLogo(
+    // Initializing the QR Encoder with your value to be encoded, type you required and Dimension
+    // Initializing the QR Encoder with your value to be encoded, type you required and Dimension
 
-        QrLogo(
-            drawable = DrawableSource.Resource(R.mipmap.ic_launcher),
-            size = .25f,
-            padding = QrLogoPadding.Accurate(.1f),
-            shape = QrLogoShape.Circle
-        )
-    ).setColors(
-        QrColors(
-            dark = QrColor.Solid(getColor(R.color.black)),
-            highlighting = QrColor.Solid(0xddffffff.toColor()),
-        )
-    ).setElementsShapes(
-        QrElementsShapes(
-            darkPixel = QrPixelShape.RoundCorners(),
-            ball = QrBallShape.RoundCorners(.25f),
-            frame = QrFrameShape.RoundCorners(.25f),
-         )
-    ).setPadding(0f).build()
-
-    val generator = QrCodeGenerator(this)
-    return generator.generateQrCode(
-        QrData.Text(data.toString()), options, StandardCharsets.UTF_8
-    )
+    val qrgEncoder = QRGEncoder(data.toString(), null, QRGContents.Type.TEXT, 150)
+//    if (withColor)
+//        qrgEncoder.colorWhite = ColorsZ.values().find {
+//            it.name == zone?.zoneColor
+//        }?.color?.toArgb() ?: R.color.white
+    return qrgEncoder.getBitmap(0)
 }
 
 
@@ -469,7 +632,8 @@ fun SampleSpinner(
 ) {
     var selected by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    if (list.isNotEmpty()) selected = list[selectedValue]
+    if (list.isNotEmpty())
+        selected = list.getOrNull(selectedValue) ?: ""
     Text(
         text = hint, modifier = Modifier.fillMaxWidth(), fontSize = 14.sp, color = Color.DarkGray
     )
@@ -540,61 +704,99 @@ fun SampleSpinner(
     Spacer(modifier = Modifier.height(10.dp))
 }
 
-fun Bitmap.saveBitmap(imageName: String, context: Context): Uri? {
+fun Bitmap.saveBitmap(
+    folder: String,
+    imageName: String,
+    context: Context,
+    onError: (String) -> Unit
+): Uri? {
     var uri: Uri? = null
+    val fileName = "$imageName.jpg"
     try {
-        val fileName = "$imageName.jpg"
+
         val values = ContentValues()
         values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpg")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            values.put(MediaStore.MediaColumns.RELATIVE_PATH, "DCIM/")
-            //values.put(MediaStore.MediaColumns.IS_PENDING, 1)
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, "DCIM$folder/")
+            // values.put(MediaStore.MediaColumns.IS_PENDING, 1)
         } else {
             val directory =
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM + folder)
             val file = File(directory, fileName)
             values.put(MediaStore.MediaColumns.DATA, file.absolutePath)
         }
-        uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        if (uri != null) {
-            context.contentResolver.openOutputStream(
-                uri
-            ).use { output ->
-                this.compress(Bitmap.CompressFormat.JPEG, 100, output)
+        var isExist = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val extVolumeUri: Uri = MediaStore.Files.getContentUri("external")
+            // query for the file
+            val cursor: Cursor? = context.contentResolver.query(
+                extVolumeUri,
+                null,
+                MediaStore.MediaColumns.DISPLAY_NAME + " = ? AND " + MediaStore.MediaColumns.RELATIVE_PATH + " = ?",
+                arrayOf(fileName, "DCIM$folder/"),
+                null
+            )
+            if (cursor != null && cursor.count > 0) {
+                // get URI
+                while (cursor.moveToNext()) {
+                    val nameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+                    if (nameIndex > -1) {
+                        val displayName = cursor.getString(nameIndex)
+                        if (displayName == fileName) {
+                            val idIndex = cursor.getColumnIndex(MediaStore.MediaColumns._ID)
+                            if (idIndex > -1) {
+                                val id = cursor.getLong(idIndex)
+                                uri = ("$extVolumeUri/$id").toUri()
+                                println(uri)
+                                isExist = true
+                            }
+                        }
+                    }
+                }
+
+                cursor.close()
+            } else {
+                uri =
+                    context.contentResolver.insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        values
+                    )
             }
-             Toast.makeText(context, "تم حفظ الــQR", Toast.LENGTH_LONG).show()
         } else {
-             Toast.makeText(context, "فشل حفظ الــQR", Toast.LENGTH_LONG).show()
+            uri =
+                context.contentResolver.insert(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    values
+                )
         }
 
+        if (uri != null) {
+            if (isExist) {
+                context.contentResolver.delete(
+                    uri,
+                    MediaStore.MediaColumns.DISPLAY_NAME + " = ? AND " + MediaStore.MediaColumns.RELATIVE_PATH + " = ?",
+                    arrayOf(fileName, "DCIM$folder/")
+                )
+                uri =
+                    context.contentResolver.insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        values
+                    )
+            }
+
+            uri?.let {
+                context.contentResolver.openOutputStream(it, "wt").use { output ->
+                    this.compress(Bitmap.CompressFormat.JPEG, 100, output)
+                }
+            }
+        } else {
+            onError("")
+        }
     } catch (e: Exception) {
-      Toast.makeText(context, e.toString() + "فشل حفظ الــQR", Toast.LENGTH_LONG).show()
+        onError(e.message.toString())
     }
 
     return uri
 }
-
-//@Composable
-//fun editImage(){
-//    val annotatedString = buildAnnotatedString {
-//        append("This is text ")
-//        appendInlineContent(id = "imageId")
-//        append(" with a call icon")
-//    }
-//    val inlineContentMap = mapOf(
-//        "imageId" to InlineTextContent(
-//            Placeholder(20.sp, 20.sp, PlaceholderVerticalAlign.TextCenter)
-//        ) {
-//            Image(
-//                imageVector = Icons.Default.Call,
-//                modifier = Modifier.fillMaxSize(),
-//                contentDescription = ""
-//            )
-//        }
-//    )
-//
-//    Text(annotatedString, inlineContent = inlineContentMap)
-//}
-
 

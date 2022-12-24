@@ -1,7 +1,12 @@
 package com.azmiradi.churchapp.all_applications
 
+//import androidx.room.Entity
+//import androidx.room.PrimaryKey
+
+//@Entity(tableName = "ApplicationPojo")
 data class ApplicationPojo(
     var email: String? = null,
+  //  @PrimaryKey
     var nationalID: String? = null,
     var phone: String? = null,
     var jobTitle: String? = null,
@@ -9,7 +14,7 @@ data class ApplicationPojo(
     var name: String? = null,
     var employer: String? = null,
     var className: String? = null,
-    var zoneID: Int? = null,
+    var zoneID: String? = null,
     var isApproved: Boolean? = null,
     var note: String? = null,
     var image2: String? = null,
@@ -20,4 +25,5 @@ data class ApplicationPojo(
     var recomandedBy: String? = null,
     var priority: Int? = 0,
     var isSandedApproved: Boolean? = null,
-    )
+    var invitationNumber: String? = null,
+)

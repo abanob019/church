@@ -104,7 +104,7 @@ public class ExcelUtils {
      */
     private static void setHeaderCellStyle() {
         headerCellStyle = workbook.createCellStyle();
-        headerCellStyle.setFillForegroundColor(HSSFColor.AQUA.index);
+        headerCellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
         headerCellStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
         headerCellStyle.setAlignment(CellStyle.ALIGN_CENTER);
     }
@@ -116,66 +116,67 @@ public class ExcelUtils {
         Row headerRow = sheet.createRow(0);
 
         cell = headerRow.createCell(0);
-        cell.setCellValue("البريد الالكتروني");
+        cell.setCellValue("مسلسل");
         cell.setCellStyle(headerCellStyle);
 
         cell = headerRow.createCell(1);
-        cell.setCellValue("الرقم القومي");
-        cell.setCellStyle(headerCellStyle);
-
-
-        cell = headerRow.createCell(2);
-        cell.setCellValue("رقم الهاتف");
-        cell.setCellStyle(headerCellStyle);
-
-        cell = headerRow.createCell(3);
-        cell.setCellValue("المسمي الوظيفي");
-        cell.setCellStyle(headerCellStyle);
-
-        cell = headerRow.createCell(4);
-        cell.setCellValue("اللقب");
-        cell.setCellStyle(headerCellStyle);
-
-        cell = headerRow.createCell(5);
         cell.setCellValue("الاسم");
         cell.setCellStyle(headerCellStyle);
 
+        cell = headerRow.createCell(2);
+        cell.setCellValue("الصفة");
+        cell.setCellStyle(headerCellStyle);
+
+        cell = headerRow.createCell(3);
+        cell.setCellValue("set");
+        cell.setCellStyle(headerCellStyle);
+
+        cell = headerRow.createCell(4);
+        cell.setCellValue("الجهة");
+        cell.setCellStyle(headerCellStyle);
+
+        cell = headerRow.createCell(5);
+        cell.setCellValue("رقم الدعوة");
+        cell.setCellStyle(headerCellStyle);
+
         cell = headerRow.createCell(6);
-        cell.setCellValue("جهة العمل");
+        cell.setCellValue("Color");
         cell.setCellStyle(headerCellStyle);
 
         cell = headerRow.createCell(7);
-        cell.setCellValue("الفئة");
+        cell.setCellValue("Class");
         cell.setCellStyle(headerCellStyle);
 
         cell = headerRow.createCell(8);
-        cell.setCellValue("منطقة الجلوس");
+        cell.setCellValue("الرقم القومي");
         cell.setCellStyle(headerCellStyle);
 
         cell = headerRow.createCell(9);
-        cell.setCellValue("مفعلة");
+        cell.setCellValue("Note");
         cell.setCellStyle(headerCellStyle);
 
-
         cell = headerRow.createCell(10);
-        cell.setCellValue("ملاحظات");
+        cell.setCellValue("Priority");
         cell.setCellStyle(headerCellStyle);
 
         cell = headerRow.createCell(11);
-        cell.setCellValue("تم ارساله التفعيل");
+        cell.setCellValue("approved");
         cell.setCellStyle(headerCellStyle);
 
-
         cell = headerRow.createCell(12);
-        cell.setCellValue("وجة البطاقة");
+        cell.setCellValue("attend");
         cell.setCellStyle(headerCellStyle);
 
         cell = headerRow.createCell(13);
-        cell.setCellValue("خلفية البطاقة");
+        cell.setCellValue("رقم المحمول");
         cell.setCellStyle(headerCellStyle);
 
         cell = headerRow.createCell(14);
-        cell.setCellValue("حضور");
+        cell.setCellValue("وجه البطاقه");
+        cell.setCellStyle(headerCellStyle);
+
+        cell = headerRow.createCell(15);
+        cell.setCellValue("خلف البطاقة");
         cell.setCellStyle(headerCellStyle);
     }
 
@@ -194,34 +195,34 @@ public class ExcelUtils {
 
             // Create Cells for each row
             cell = rowData.createCell(0);
-            cell.setCellValue(dataList.get(i).getEmail());
+            cell.setCellValue(i + 1);
 
             // Create Cells for each row
             cell = rowData.createCell(1);
-            cell.setCellValue(dataList.get(i).getNationalID());
+            cell.setCellValue(dataList.get(i).getName());
 
             // Create Cells for each row
             cell = rowData.createCell(2);
-            cell.setCellValue(dataList.get(i).getPhone());
-
-
-            // Create Cells for each row
-            cell = rowData.createCell(3);
-            cell.setCellValue(dataList.get(i).getJobTitle());
-
-
-            // Create Cells for each row
-            cell = rowData.createCell(4);
             cell.setCellValue(dataList.get(i).getTitle());
 
 
             // Create Cells for each row
+            cell = rowData.createCell(3);
+            cell.setCellValue(dataList.get(i).getChare());
+
+
+            // Create Cells for each row
+            cell = rowData.createCell(4);
+            cell.setCellValue(dataList.get(i).getJobTitle());
+
+
+            // Create Cells for each row
             cell = rowData.createCell(5);
-            cell.setCellValue(dataList.get(i).getName());
+            cell.setCellValue(dataList.get(i).getInvitationNumber());
 
             // Create Cells for each row
             cell = rowData.createCell(6);
-            cell.setCellValue(dataList.get(i).getEmployer());
+            cell.setCellValue(dataList.get(i).getZoneID());
 
 
             // Create Cells for each row
@@ -230,35 +231,33 @@ public class ExcelUtils {
 
             // Create Cells for each row
             cell = rowData.createCell(8);
-            if (dataList.get(i).getZoneID() == null)
-                cell.setCellValue(0);
-            else
-                cell.setCellValue(dataList.get(i).getZoneID());
+            cell.setCellValue(dataList.get(i).getNationalID());
 
-
-            // Create Cells for each row
             cell = rowData.createCell(9);
-            cell.setCellValue(Boolean.TRUE.equals(dataList.get(i).isApproved()));
-
-            // Create Cells for each row
-            cell = rowData.createCell(10);
             cell.setCellValue(dataList.get(i).getNote());
+
+            cell = rowData.createCell(10);
+            if (dataList.get(i).getPriority() != null)
+                cell.setCellValue(dataList.get(i).getPriority());
+            else
+                cell.setCellValue(0);
 
             // Create Cells for each row
             cell = rowData.createCell(11);
-            cell.setCellValue(Boolean.TRUE.equals(dataList.get(i).isSandedApproved()));
+            cell.setCellValue(Boolean.TRUE.equals(dataList.get(i).isApproved()));
 
             // Create Cells for each row
             cell = rowData.createCell(12);
+            cell.setCellValue(Boolean.TRUE.equals(dataList.get(i).isAttend()));
+
+            cell = rowData.createCell(13);
+            cell.setCellValue(dataList.get(i).getPhone());
+
+            cell = rowData.createCell(14);
             cell.setCellValue(dataList.get(i).getImage1());
 
-            // Create Cells for each row
-            cell = rowData.createCell(13);
+            cell = rowData.createCell(15);
             cell.setCellValue(dataList.get(i).getImage2());
-
-            // Create Cells for each row
-            cell = rowData.createCell(14);
-            cell.setCellValue(Boolean.TRUE.equals(dataList.get(i).isAttend()));
         }
     }
 
@@ -344,52 +343,54 @@ public class ExcelUtils {
 
                     while (cellIterator.hasNext()) {
                         Cell cell = cellIterator.next();
-                        if (index == 0)
-                            applicationPojo.setEmail(cell.getStringCellValue());
 
                         if (index == 1)
-                            applicationPojo.setNationalID(cell.getStringCellValue());
+                            applicationPojo.setClassName(cell.getStringCellValue());
 
                         if (index == 2)
-                            applicationPojo.setPhone(cell.getStringCellValue());
-
-                        if (index == 3)
-                            applicationPojo.setJobTitle(cell.getStringCellValue());
-
-                        if (index == 4)
                             applicationPojo.setTitle(cell.getStringCellValue());
 
+                        if (index == 3)
+                            applicationPojo.setChare(cell.getStringCellValue());
+
+                        if (index == 4)
+                            applicationPojo.setJobTitle(cell.getStringCellValue());
+
                         if (index == 5)
-                            applicationPojo.setName(cell.getStringCellValue());
+                            applicationPojo.setInvitationNumber(cell.getStringCellValue());
 
                         if (index == 6)
-                            applicationPojo.setEmployer(cell.getStringCellValue());
+                            applicationPojo.setZoneID(cell.getStringCellValue());
 
                         if (index == 7)
                             applicationPojo.setClassName(cell.getStringCellValue());
 
                         if (index == 8)
-                            applicationPojo.setZoneID((int) cell.getNumericCellValue());
+                            applicationPojo.setNationalID(cell.getStringCellValue());
 
                         if (index == 9)
-                            applicationPojo.setApproved(cell.getBooleanCellValue());
-
-                        if (index == 10)
                             applicationPojo.setNote(cell.getStringCellValue());
 
+                        if (index == 10)
+                            applicationPojo.setPriority((int) cell.getNumericCellValue());
+
+
                         if (index == 11)
-                            applicationPojo.setSandedApproved(cell.getBooleanCellValue());
+                            applicationPojo.setApproved(cell.getBooleanCellValue());
 
                         if (index == 12)
-                            applicationPojo.setImage1(cell.getStringCellValue());
-
-                        if (index == 13)
-                            applicationPojo.setImage2(cell.getStringCellValue());
-
-                        if (index == 14)
                             applicationPojo.setAttend(cell.getBooleanCellValue());
 
+                        if (index == 13)
+                            applicationPojo.setPhone(cell.getStringCellValue());
 
+
+                        if (index == 14)
+                            applicationPojo.setImage1(cell.getStringCellValue());
+
+
+                        if (index == 15)
+                            applicationPojo.setImage2(cell.getStringCellValue());
 
                         index++;
                     }

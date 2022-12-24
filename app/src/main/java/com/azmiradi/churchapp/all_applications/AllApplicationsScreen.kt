@@ -28,7 +28,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.onimur.handlepathoz.HandlePathOz
 import br.com.onimur.handlepathoz.HandlePathOzListener
 import br.com.onimur.handlepathoz.model.PathOz
-import com.azmiradi.churchapp.App
 import com.azmiradi.churchapp.NavigationDestination.APPLICATION_DETAILS
 import com.azmiradi.churchapp.ProgressBar
 import com.azmiradi.churchapp.application_details.CustomTextFile
@@ -421,7 +420,7 @@ fun CustomTabs(
 
 @Composable
 fun DetermineApplicationsInfoDialog(
-    onClickConfirm: (zoneID: Int, classes: String, note: String) -> Unit,
+    onClickConfirm: (zoneID: String, classes: String, note: String) -> Unit,
     onClickCancel: () -> Unit,
     viewModel: AllApplicationViewModel = hiltViewModel()
 ) {
@@ -483,8 +482,8 @@ fun DetermineApplicationsInfoDialog(
                         .padding(end = 10.dp),
                     onClick = {
                         onClickConfirm(
-                            viewModel.stateZones.value.data?.getOrNull(selectedZone.value)?.zoneID
-                                ?: 0,
+                            viewModel.stateZones.value.data?.getOrNull(selectedZone.value)?.zoneName
+                                ?: "",
                             viewModel.stateClasses.value.data?.getOrNull(selectedClass.value)?.className
                                 ?: "",
                             note.value
