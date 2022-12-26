@@ -11,11 +11,6 @@ import androidmads.library.qrgenearator.QRGContents
 import androidmads.library.qrgenearator.QRGEncoder
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.viewinterop.AndroidView
-import com.azmiradi.churchapp.all_applications.AllApplicationsScreen
-import com.azmiradi.churchapp.application_details.saveBitmap
-import com.azmiradi.churchapp.main_screen.MainScreen
 import com.azmiradi.churchapp.ui.theme.ChurchTheme
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
@@ -53,8 +48,7 @@ class MainActivity : AppCompatActivity() {
 //        }
         setContent {
             ChurchTheme {
-                Navigation()
-                //MyContent()
+               Navigation()
             }
         }
 

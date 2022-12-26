@@ -23,13 +23,13 @@ import com.azmiradi.churchapp.application_details.*
 
 @Composable
 fun ApplicationDetailsDialog(
-    applicationID: String,
+    invitationNumber: String,
     onAttend: (String) -> Unit,
     onBack: () -> Unit,
     viewModel: ApplicationDetailsViewModel = hiltViewModel()
 ) {
     LaunchedEffect(Unit) {
-        viewModel.getApplicationDetails(applicationID)
+        viewModel.getApplicationDetailsByInvitation(invitationNumber)
     }
 
     val state = viewModel.stateApplicationDetails.value
@@ -41,9 +41,16 @@ fun ApplicationDetailsDialog(
         isShow = state.isLoading || stateUpdate.isLoading
     )
 
-    if (state.error.isNotEmpty() || stateUpdate.error.isNotEmpty()) {
+    if (stateUpdate.error.isNotEmpty()) {
         LaunchedEffect(Unit) {
             Toast.makeText(context, "فشل اتمام العمليه", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    if (state.error.isNotEmpty() ) {
+        LaunchedEffect(Unit) {
+            Toast.makeText(context, state.error, Toast.LENGTH_LONG).show()
+            onBack()
         }
     }
 

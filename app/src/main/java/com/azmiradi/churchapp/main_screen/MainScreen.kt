@@ -1,5 +1,7 @@
 package com.azmiradi.churchapp.main_screen
 
+import android.app.Activity
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.*
@@ -9,10 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -21,10 +25,12 @@ import com.azmiradi.churchapp.NavigationDestination.ADD_ZONE
 import com.azmiradi.churchapp.NavigationDestination.ALL_APPLICATIONS
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.journeyapps.barcodescanner.CaptureManager
+import com.journeyapps.barcodescanner.CompoundBarcodeView
 import io.github.g00fy2.quickie.QRResult
 import io.github.g00fy2.quickie.ScanQRCode
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(), onNavigate: (String) -> Unit
@@ -37,43 +43,49 @@ fun MainScreen(
         )
     )
 
-    val scannedID = rememberSaveable() {
+    val scannedID = rememberSaveable {
         mutableStateOf("")
     }
 
-    val allScannedData = rememberSaveable() {
+    val allScannedData = rememberSaveable {
         mutableStateOf("")
     }
 
-    val detailsDialog = rememberSaveable() {
+    val detailsDialog = rememberSaveable {
         mutableStateOf(false)
     }
 
-    val detailsDialogOffline = rememberSaveable() {
+    val detailsDialogOffline = rememberSaveable {
         mutableStateOf(false)
     }
 
-    val isOffline = rememberSaveable() {
+    val isOffline = rememberSaveable {
         mutableStateOf(false)
     }
 
-    val qrData = rememberSaveable() {
+    val qrData = rememberSaveable {
         mutableStateOf("")
     }
+
+    val scanBarCode = rememberSaveable {
+        mutableStateOf(false)
+    }
+
+
     val context = LocalContext.current
+
     val scanQrCodeLauncher = rememberLauncherForActivityResult(ScanQRCode()) { result ->
         when (result) {
             is QRResult.QRSuccess -> {
-                println("result.content.rawValue::: "+result.content.rawValue)
-//                if (isOffline.value) {
-//                    detailsDialogOffline.value = true
-//                    qrData.value = result.content.rawValue
-//                } else {
-//                    val nationalId = result.content.rawValue.split("\n")[2].trim()
-//                    scannedID.value = nationalId
-//                    detailsDialog.value = true
-//                    allScannedData.value = result.content.rawValue
-//                }
+                if (isOffline.value) {
+                    detailsDialogOffline.value = true
+                    qrData.value = result.content.rawValue
+                } else {
+                    val nationalId = result.content.rawValue.split("\n")[2].trim()
+                    scannedID.value = nationalId
+                    detailsDialog.value = true
+                    allScannedData.value = result.content.rawValue
+                }
             }
 
             is QRResult.QRError -> {
@@ -150,8 +162,9 @@ fun MainScreen(
                 .fillMaxWidth()
                 .padding(end = 50.dp, start = 50.dp),
                 onClick = {
-                    isOffline.value = true
-                    scanQrCodeLauncher.launch(null)
+                    // isOffline.value = true
+                    //  scanQrCodeLauncher.launch(null)
+                    scanBarCode.value = true
                 }) {
                 Text(text = "فحص اوفلاين", fontSize = 16.sp)
             }
@@ -175,12 +188,13 @@ fun MainScreen(
         ), onDismissRequest = {
             detailsDialog.value = false
         }) {
-            ApplicationDetailsDialog(applicationID = scannedID.value, onAttend = {
-                viewModel.sendMail(allScannedData.value, it)
-                detailsDialog.value = false
-            }, onBack = {
-                detailsDialog.value = false
-            })
+            ApplicationDetailsDialog(invitationNumber = scannedID.value,
+                onAttend = {
+                    viewModel.sendMail(allScannedData.value, it)
+                    detailsDialog.value = false
+                },onBack = {
+                    detailsDialog.value = false
+                })
         }
     }
 
@@ -194,4 +208,42 @@ fun MainScreen(
             ApplicationDetailsDialog(data = qrData.value, color = color)
         }
     }
+
+    if (scanBarCode.value) {
+        Dialog(properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true
+        ), onDismissRequest = {
+            scanBarCode.value = false
+        }) {
+            StartScan(context) {
+                scanBarCode.value = false
+                detailsDialog.value = true
+                allScannedData.value = it
+            }
+        }
+    }
+}
+
+
+@Composable
+fun StartScan(context: Context, onScanned: (String) -> Unit) {
+    AndroidView(
+        factory = {
+            CompoundBarcodeView(context).apply {
+                val capture = CaptureManager(context as Activity, this)
+                capture.initializeFromIntent(context.intent, null)
+                this.setStatusText("")
+                capture.decode()
+                this.decodeContinuous { result ->
+                    result.text?.let { barCodeOrQr ->
+                        onScanned(barCodeOrQr)
+                    }
+                }
+                this.resume()
+                capture.onDestroy()
+            }
+        },
+        modifier = Modifier
+    )
 }

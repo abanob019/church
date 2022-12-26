@@ -38,7 +38,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
         _stateSendMail.value = DataState(isLoading = true)
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val from = "azmiradi97@gmail.com"
+                val from = "christmas.copticchurch@gmail.com"
                 val host = "smtp.gmail.com"
                 val properties = System.getProperties()
                 properties["mail.smtp.host"] = host
@@ -47,7 +47,10 @@ class MainViewModel @Inject constructor() : ViewModel() {
                 properties["mail.smtp.auth"] = "true"
                 val session = Session.getInstance(properties, object : Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication("azmiradi97@gmail.com", "hgqmsfzyooefobla")
+                        return PasswordAuthentication(
+                            "christmas.copticchurch@gmail.com",
+                            "ctcdtqvmxpekarac"
+                        )
                     }
                 })
                 //session.setDebug(true);

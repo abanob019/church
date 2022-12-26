@@ -165,7 +165,6 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
                         multipart.addBodyPart(attachmentPart)
                     } catch (e: IOException) {
                         e.printStackTrace()
-                        println("Email : " + mailTo + " : " + e.message)
 
                     }
                 }
@@ -173,16 +172,63 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
                 message.setContent(multipart)
                 Transport.send(message)
                 _stateSendMail.value = DataState(data = true)
-                println("Email : " + mailTo + " : ")
 
             } catch (e: Throwable) {
-                println("Email : " + mailTo + " : " + e.message)
 
                 _stateSendMail.value = DataState(error = e.message ?: "Something worrying")
             }
 
         }
 
+    }
+
+
+    fun getApplicationDetailsByInvitation(invitationNumber: String) {
+        _stateApplicationDetails.value = DataState(isLoading = true)
+        FirebaseDatabase.getInstance().reference
+            .addListenerForSingleValueEvent(
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val application = snapshot.child(APPLICATIONS)
+                            .getValue(ApplicationPojo::class.java)
+
+                        var applicationPojo: ApplicationPojo? = null
+                        for (data in snapshot.child(APPLICATIONS).children) {
+                            applicationPojo = data.getValue(ApplicationPojo::class.java)
+                            if (applicationPojo?.invitationNumber == invitationNumber)
+                                break
+                        }
+
+                        val zoneList: MutableList<Zone> = ArrayList()
+                        val classesList: MutableList<Classes> = ArrayList()
+
+                        for (data in snapshot.child(CLASSES).children) {
+                            data.getValue(Classes::class.java)?.let {
+                                classesList.add(it)
+                            }
+                        }
+
+                        for (data in snapshot.child(ZONE).children) {
+                            data.getValue(Zone::class.java)?.let {
+                                zoneList.add(it)
+                            }
+                        }
+
+                        if (applicationPojo != null) {
+                            _stateApplicationDetails.value =
+                                DataState(data = DetailsData(application, zoneList, classesList))
+                        } else {
+                            _stateApplicationDetails.value =
+                                DataState(error = "رقم الدعوة غير صحيح")
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        _stateApplicationDetails.value = DataState(error = error.message)
+                    }
+
+                }
+            )
     }
 
     fun resetViewModel() {

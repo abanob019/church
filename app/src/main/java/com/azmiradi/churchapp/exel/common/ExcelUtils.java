@@ -68,7 +68,7 @@ public class ExcelUtils {
         setHeaderCellStyle();
 
         // Creating a New Sheet and Setting width for each column
-        sheet = workbook.createSheet(Constants.EXCEL_SHEET_NAME);
+        sheet = workbook.createSheet("applications");
         sheet.setColumnWidth(0, (15 * 400));
         sheet.setColumnWidth(1, (15 * 400));
 

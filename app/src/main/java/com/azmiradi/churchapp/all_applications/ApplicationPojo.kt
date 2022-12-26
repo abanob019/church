@@ -1,12 +1,13 @@
 package com.azmiradi.churchapp.all_applications
 
-//import androidx.room.Entity
-//import androidx.room.PrimaryKey
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-//@Entity(tableName = "ApplicationPojo")
+@Entity(tableName = "ApplicationPojo")
 data class ApplicationPojo(
+    @PrimaryKey var id:Int=0,
     var email: String? = null,
-  //  @PrimaryKey
+ //   @PrimaryKey
     var nationalID: String? = null,
     var phone: String? = null,
     var jobTitle: String? = null,
