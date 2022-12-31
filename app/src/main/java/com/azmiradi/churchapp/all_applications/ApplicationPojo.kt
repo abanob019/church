@@ -5,10 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "ApplicationPojo")
 data class ApplicationPojo(
-    @PrimaryKey var id:Int=0,
     var email: String? = null,
- //   @PrimaryKey
-    var nationalID: String? = null,
+    @PrimaryKey
+    var nationalID: String="20020020020000",
     var phone: String? = null,
     var jobTitle: String? = null,
     var title: String? = null,
@@ -28,3 +27,8 @@ data class ApplicationPojo(
     var isSandedApproved: Boolean? = null,
     var invitationNumber: String? = null,
 )
+{
+    init {
+
+    }
+}

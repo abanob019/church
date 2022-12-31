@@ -12,6 +12,5 @@ class App: Application()
     override fun onCreate() {
         super.onCreate()
         MainActivity.appLocale = Locale(ARABIC_LANGUAGE)
-
     }
 }

@@ -12,13 +12,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +37,7 @@ import br.com.onimur.handlepathoz.HandlePathOzListener
 import br.com.onimur.handlepathoz.model.PathOz
 import com.azmiradi.churchapp.NavigationDestination.APPLICATION_DETAILS
 import com.azmiradi.churchapp.ProgressBar
+import com.azmiradi.churchapp.R
 import com.azmiradi.churchapp.application_details.CustomTextFile
 import com.azmiradi.churchapp.application_details.SampleSpinner
 import com.azmiradi.churchapp.exel.common.ExcelUtils
@@ -110,6 +118,7 @@ fun AllApplicationsScreen(
 
     stateSaveData.data?.let {
         LaunchedEffect(it) {
+            viewModel.resetData()
             selectedIndex.value = 0
             showDataOfExile.value = false
             showDetermineApplicationsInfoDialog.value = false
@@ -125,19 +134,29 @@ fun AllApplicationsScreen(
             applicationsList.addAll(it)
         }
     }
+
     Scaffold(topBar = {
-        TopAppBar(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            Text(
-                text = "كل المسجلين حتي الان",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.W400,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(start = 10.dp)
-            )
+        Column(Modifier.fillMaxWidth()) {
+            TopAppBar(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "كل المسجلين حتي الان",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.W400,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(start = 10.dp)
+                )
+            }
+            Divider(color = Color.White, thickness = 1.dp)
+            SearchView {
+                viewModel.getApplications(type = ApplicationsType.values().find {type->
+                    selectedIndex.value == type.id
+                } ?: ApplicationsType.All, it)
+            }
+            Divider(color = Color.White, thickness = 1.dp)
         }
+
 
     }) {
         Column(Modifier.fillMaxSize()) {
@@ -147,10 +166,11 @@ fun AllApplicationsScreen(
                     .fillMaxWidth()
                     .padding(10.dp)
             ) {
-                Button(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(end = 10.dp),
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(end = 10.dp),
                     onClick = {
                         launcher.launch("application/vnd.ms-excel")
                     }) {
@@ -170,11 +190,9 @@ fun AllApplicationsScreen(
                             applicationsList
                         )
                         if (list) {
-                            Toast.makeText(context, "تم حفظ الملف", Toast.LENGTH_LONG)
-                                .show()
+                            Toast.makeText(context, "تم حفظ الملف", Toast.LENGTH_LONG).show()
                         } else {
-                            Toast.makeText(context, "فشل حفظ الملف", Toast.LENGTH_LONG)
-                                .show()
+                            Toast.makeText(context, "فشل حفظ الملف", Toast.LENGTH_LONG).show()
                         }
                     }) {
                     Text(
@@ -183,42 +201,34 @@ fun AllApplicationsScreen(
                 }
             }
 
-            if (selectedApplications.isNotEmpty() &&
-                selectedIndex.value != ApplicationsType.All.id
-            ) {
+            if (selectedApplications.isNotEmpty() && selectedIndex.value != ApplicationsType.All.id) {
                 Button(modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
-                    onClick = {
-                        if ((selectedIndex.value == ApplicationsType.Active.id)) {
-                            viewModel.updateData(selectedApplications.map {
-                                it.copy(isApproved = false)
-                            }, 0)
+                    .padding(10.dp), onClick = {
+                    if ((selectedIndex.value == ApplicationsType.Active.id)) {
+                        viewModel.updateData(selectedApplications.map {
+                            it.copy(isApproved = false)
+                        }, 0)
 
-                        } else {
-                            showDetermineApplicationsInfoDialog.value = true
-                        }
-                    }) {
+                    } else {
+                        showDetermineApplicationsInfoDialog.value = true
+                    }
+                }) {
                     Text(
                         text = if (selectedIndex.value == ApplicationsType.Active.id) "الغاء التفعيل"
-                        else "تفعيل",
-                        fontSize = 16.sp
+                        else "تفعيل", fontSize = 16.sp
                     )
                 }
             }
-            ShowItems(selectedIndex,
-                selectedApplications,
-                applicationsList,
-                onClick = {
-                    onNavigate(APPLICATION_DETAILS, it)
-                })
+            ShowItems(selectedIndex, selectedApplications, applicationsList, onClick = {
+                onNavigate(APPLICATION_DETAILS, it)
+            })
         }
     }
 
     if (showDataOfExile.value) {
         Dialog(properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false
+            dismissOnBackPress = false, dismissOnClickOutside = false
         ), onDismissRequest = {
             showDataOfExile.value = false
         }) {
@@ -228,7 +238,6 @@ fun AllApplicationsScreen(
                 backgroundColor = Color.White
             ) {
                 Column(Modifier.fillMaxWidth()) {
-                    ShowItems(applicationsList = selectedApplications)
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -258,6 +267,7 @@ fun AllApplicationsScreen(
                             )
                         }
                     }
+                    ShowItems(applicationsList = selectedApplications)
                 }
             }
         }
@@ -265,30 +275,25 @@ fun AllApplicationsScreen(
 
     if (showDetermineApplicationsInfoDialog.value) {
         Dialog(properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false
+            dismissOnBackPress = false, dismissOnClickOutside = false
         ), onDismissRequest = {
             showDetermineApplicationsInfoDialog.value = false
         }) {
-            DetermineApplicationsInfoDialog(
-                onClickConfirm = { zone, classes, not ->
-                    viewModel.updateData(selectedApplications.map {
-                        it.copy(
-                            isApproved = true, zoneID = zone,
-                            className = classes,
-                            note = not
-                        )
-                    }, 0)
-                    selectedIndex.value = 0
-                    showDataOfExile.value = false
-                    showDetermineApplicationsInfoDialog.value = false
-                    selectedApplications.clear()
-                    viewModel.getApplications()
-                    Toast.makeText(context, "تم حفظ البيانات", Toast.LENGTH_LONG).show()
-                },
-                onClickCancel = {
-                    showDetermineApplicationsInfoDialog.value = false
-                })
+            DetermineApplicationsInfoDialog(onClickConfirm = { zone, classes, not ->
+                viewModel.updateData(selectedApplications.map {
+                    it.copy(
+                        isApproved = true, zoneID = zone, className = classes, note = not
+                    )
+                }, 0)
+                selectedIndex.value = 0
+                showDataOfExile.value = false
+                showDetermineApplicationsInfoDialog.value = false
+                selectedApplications.clear()
+                viewModel.getApplications()
+                Toast.makeText(context, "تم حفظ البيانات", Toast.LENGTH_LONG).show()
+            }, onClickCancel = {
+                showDetermineApplicationsInfoDialog.value = false
+            })
         }
     }
 }
@@ -301,17 +306,14 @@ fun ShowItems(
     onClick: (nationalID: String) -> Unit,
 ) {
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.padding(
-            top = 5.dp,
-            end = 10.dp,
-            start = 10.dp, bottom = 10.dp
+        verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(
+            top = 5.dp, end = 10.dp, start = 10.dp, bottom = 10.dp
         )
     ) {
         items(applicationsList) {
             ApplicationItem(
-                selectable = selectable.value == ApplicationsType.Active.id ||
-                        selectable.value == ApplicationsType.DisActive.id, applicationPojo = it,
+                selectable = selectable.value == ApplicationsType.Active.id || selectable.value == ApplicationsType.DisActive.id,
+                applicationPojo = it,
                 selectedApplications = selectedItems,
                 onLongClick = onClick
             )
@@ -346,19 +348,17 @@ fun ApplicationItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
-            .combinedClickable(
-                onClick = {
-                    if (selectedApplications?.contains(applicationPojo) == true)
-                        selectedApplications.remove(applicationPojo)
-                    else
-                        selectedApplications?.add(applicationPojo)
+            .combinedClickable(onClick = {
+                if (selectedApplications?.contains(applicationPojo) == true) selectedApplications.remove(
+                    applicationPojo
+                )
+                else selectedApplications?.add(applicationPojo)
 
-                },
-                onLongClick = {
-                    if (onLongClick != null) {
-                        onLongClick(applicationPojo.nationalID ?: "")
-                    }
-                }),
+            }, onLongClick = {
+                if (onLongClick != null) {
+                    onLongClick(applicationPojo.nationalID ?: "")
+                }
+            }),
         backgroundColor = if (selectable && selectedApplications?.contains(applicationPojo) == true) SelectItemColor else Color.White,
         elevation = 10.dp,
         shape = RoundedCornerShape(8.dp)
@@ -389,30 +389,22 @@ fun CustomTabs(
 ) {
 
     TabRow(
-        selectedTabIndex = selectedIndex.value,
-        backgroundColor = Color(0xff1E76DA)
+        selectedTabIndex = selectedIndex.value, backgroundColor = Color(0xff1E76DA)
     ) {
         ApplicationsType.values().forEachIndexed { index, type ->
             val selected = selectedIndex.value == index
-            Tab(
-                modifier = if (selected) Modifier
-                    .background(
-                        Color.White
-                    )
-                else Modifier
-                    .background(
-                        Color(
-                            0xff1E76DA
-                        )
-                    ),
-                selected = selected,
-                onClick = {
-                    selectedItems.clear()
-                    selectedIndex.value = index
-                    viewModel.getApplications(type)
-                },
-                text = { Text(text = type.title, color = Color(0xff6FAAEE)) }
+            Tab(modifier = if (selected) Modifier.background(
+                Color.White
             )
+            else Modifier.background(
+                Color(
+                    0xff1E76DA
+                )
+            ), selected = selected, onClick = {
+                selectedItems.clear()
+                selectedIndex.value = index
+                viewModel.getApplications(type)
+            }, text = { Text(text = type.title, color = Color(0xff6FAAEE)) })
         }
     }
 }
@@ -454,20 +446,16 @@ fun DetermineApplicationsInfoDialog(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            SampleSpinner(
-                "المنطقه",
+            SampleSpinner("المنطقه",
                 list = viewModel.stateZones.value.data?.mapNotNull { it.zoneName } ?: ArrayList(),
-                selectedZone.value
-            ) {
+                selectedZone.value) {
                 selectedZone.value = it
             }
             Spacer(modifier = Modifier.height(10.dp))
 
-            SampleSpinner(
-                "الفئه", list = viewModel.stateClasses.value.data?.mapNotNull {
-                    it.className
-                } ?: kotlin.collections.ArrayList(), selectedClass.value
-            ) {
+            SampleSpinner("الفئه", list = viewModel.stateClasses.value.data?.mapNotNull {
+                it.className
+            } ?: kotlin.collections.ArrayList(), selectedClass.value) {
                 selectedClass.value = it
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -475,11 +463,10 @@ fun DetermineApplicationsInfoDialog(
             Spacer(modifier = Modifier.height(20.dp))
 
             Row(Modifier.fillMaxWidth()) {
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(end = 10.dp),
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(end = 10.dp),
                     onClick = {
                         onClickConfirm(
                             viewModel.stateZones.value.data?.getOrNull(selectedZone.value)?.zoneName
@@ -488,8 +475,7 @@ fun DetermineApplicationsInfoDialog(
                                 ?: "",
                             note.value
                         )
-                    }
-                ) {
+                    }) {
                     Text(
                         text = "ارسال", fontSize = 16.sp
                     )
@@ -513,8 +499,63 @@ fun DetermineApplicationsInfoDialog(
     }
 }
 
+
 enum class ApplicationsType(val id: Int, val title: String) {
     All(0, "الكل"), Active(1, "مفعلة"), DisActive(2, "غير مفعلة"), Attended(3, "حاضرون")
 }
 
+
+@Composable
+fun SearchView(onChange: (String) -> Unit) {
+    val state = remember {
+        mutableStateOf(TextFieldValue(""))
+    }
+    TextField(
+        value = state.value,
+        onValueChange = { value ->
+            state.value = value
+            onChange(value.text)
+        },
+        modifier = Modifier.fillMaxWidth(),
+        textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
+        leadingIcon = {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = "",
+                modifier = Modifier
+                    .padding(15.dp)
+                    .size(24.dp)
+            )
+        },
+        trailingIcon = {
+            if (state.value != TextFieldValue("")) {
+                IconButton(onClick = {
+                    onChange("")
+                    state.value =
+                        TextFieldValue("") // Remove text from TextField when you press the 'X' icon
+                }) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "",
+                        modifier = Modifier
+                            .padding(15.dp)
+                            .size(24.dp)
+                    )
+                }
+            }
+        },
+        singleLine = true,
+        shape = RectangleShape, // The TextFiled has rounded corners top left and right by default
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = Color.White,
+            cursorColor = Color.White,
+            leadingIconColor = Color.White,
+            trailingIconColor = Color.White,
+            backgroundColor = colorResource(id = R.color.purple_500),
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        )
+    )
+}
 

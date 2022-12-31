@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.azmiradi.churchapp.ProgressBar
 import com.azmiradi.churchapp.all_applications.ApplicationPojo
 import com.azmiradi.churchapp.application_details.*
+import com.azmiradi.churchapp.local_database.Zone
 
 @Composable
 fun ApplicationDetailsDialog(
@@ -50,6 +51,7 @@ fun ApplicationDetailsDialog(
     if (state.error.isNotEmpty() ) {
         LaunchedEffect(Unit) {
             Toast.makeText(context, state.error, Toast.LENGTH_LONG).show()
+            viewModel.resetViewModel()
             onBack()
         }
     }
@@ -77,6 +79,7 @@ fun ApplicationDetailsDialog(
 
 
     state.data?.let {
+
         LaunchedEffect(Unit) {
             data = it
             applicationPojo = data?.applicationPojo
@@ -98,13 +101,13 @@ fun ApplicationDetailsDialog(
                     selectedZone.value = index
                 }
             }
-
         }
     }
 
     stateUpdate.data?.let {
         LaunchedEffect(key1 = Unit) {
             onAttend(applicationPojo?.email ?: "")
+            viewModel.resetViewModel()
         }
     }
 
@@ -161,6 +164,7 @@ fun ApplicationDetailsDialog(
                         .weight(1f)
                         .padding(end = 10.dp),
                         onClick = {
+                            viewModel.resetViewModel()
                             onBack()
                         }) {
                         Text(

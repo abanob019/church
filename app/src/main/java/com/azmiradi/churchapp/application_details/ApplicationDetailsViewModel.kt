@@ -1,5 +1,6 @@
 package com.azmiradi.churchapp.application_details
 
+import android.app.Application
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -9,12 +10,18 @@ import com.azmiradi.churchapp.FirebaseConstants.APPLICATIONS
 import com.azmiradi.churchapp.FirebaseConstants.CLASSES
 import com.azmiradi.churchapp.FirebaseConstants.ZONE
 import com.azmiradi.churchapp.all_applications.ApplicationPojo
+import com.azmiradi.churchapp.local_database.AppDatabase
+import com.azmiradi.churchapp.local_database.PreferenceHelper
+import com.azmiradi.churchapp.local_database.PreferenceHelper.isOffline
+import com.azmiradi.churchapp.local_database.Zone
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
@@ -28,13 +35,11 @@ import javax.mail.internet.MimeMultipart
 
 
 data class DetailsData(
-    val applicationPojo: ApplicationPojo?,
-    val zone: List<Zone>,
-    val classes: List<Classes>
+    val applicationPojo: ApplicationPojo?, val zone: List<Zone>, val classes: List<Classes>
 )
 
 @HiltViewModel
-class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
+class ApplicationDetailsViewModel @Inject constructor(val application: Application) : ViewModel() {
     private val _stateApplicationDetails = mutableStateOf(DataState<DetailsData>())
     val stateApplicationDetails: State<DataState<DetailsData>> = _stateApplicationDetails
 
@@ -45,51 +50,64 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
     private val _stateSendMail = mutableStateOf(DataState<Boolean>())
     val stateSendMail: State<DataState<Boolean>> = _stateSendMail
 
+    val appDatabase = AppDatabase.getDatabase(application).applicationDao()
+
+    val zonseDatabase = AppDatabase.getDatabase(application).zoneDao()
+
+    private fun isOffline() = PreferenceHelper.customPreference(application).isOffline
 
     fun getApplicationDetails(nationalID: String) {
         _stateApplicationDetails.value = DataState(isLoading = true)
-        FirebaseDatabase.getInstance().reference
-            .addListenerForSingleValueEvent(
-                object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val application = snapshot.child(APPLICATIONS).child(nationalID)
-                            .getValue(ApplicationPojo::class.java)
-                        val zoneList: MutableList<Zone> = ArrayList()
-                        val classesList: MutableList<Classes> = ArrayList()
+        FirebaseDatabase.getInstance().reference.addListenerForSingleValueEvent(object :
+            ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val application = snapshot.child(APPLICATIONS).child(nationalID)
+                    .getValue(ApplicationPojo::class.java)
+                val zoneList: MutableList<Zone> = ArrayList()
+                val classesList: MutableList<Classes> = ArrayList()
 
-                        for (data in snapshot.child(CLASSES).children) {
-                            data.getValue(Classes::class.java)?.let {
-                                classesList.add(it)
-                            }
-                        }
-
-                        for (data in snapshot.child(ZONE).children) {
-                            data.getValue(Zone::class.java)?.let {
-                                zoneList.add(it)
-                            }
-                        }
-
-                        _stateApplicationDetails.value =
-                            DataState(data = DetailsData(application, zoneList, classesList))
+                for (data in snapshot.child(CLASSES).children) {
+                    data.getValue(Classes::class.java)?.let {
+                        classesList.add(it)
                     }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        _stateApplicationDetails.value = DataState(error = error.message)
-                    }
-
                 }
-            )
+
+                for (data in snapshot.child(ZONE).children) {
+                    data.getValue(Zone::class.java)?.let {
+                        zoneList.add(it)
+                    }
+                }
+
+                _stateApplicationDetails.value =
+                    DataState(data = DetailsData(application, zoneList, classesList))
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                _stateApplicationDetails.value = DataState(error = error.message)
+            }
+
+        })
     }
 
+
     fun updateApplication(applicationPojo: ApplicationPojo) {
-        _stateUpdateApplication.value = DataState(isLoading = true)
-        FirebaseDatabase.getInstance().getReference(APPLICATIONS)
-            .child(applicationPojo.nationalID.toString())
-            .setValue(applicationPojo).addOnSuccessListener {
+        if (isOffline()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                _stateUpdateApplication.value = DataState(isLoading = true)
+                appDatabase.updateApplications(applicationPojo)
                 _stateUpdateApplication.value = DataState(data = true)
-            }.addOnFailureListener {
-                _stateUpdateApplication.value = DataState(error = it.message.toString())
             }
+        } else {
+            _stateUpdateApplication.value = DataState(isLoading = true)
+            FirebaseDatabase.getInstance().getReference(APPLICATIONS)
+                .child(applicationPojo.nationalID).setValue(applicationPojo)
+                .addOnSuccessListener {
+                    _stateUpdateApplication.value = DataState(data = true)
+                }.addOnFailureListener {
+                    _stateUpdateApplication.value = DataState(error = it.message.toString())
+                }
+        }
+
     }
 
     fun sendMail(mailTo: String, file: File? = null) {
@@ -106,8 +124,7 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
                 val session = Session.getInstance(properties, object : Authenticator() {
                     override fun getPasswordAuthentication(): PasswordAuthentication {
                         return PasswordAuthentication(
-                            "christmas.copticchurch@gmail.com",
-                            "ctcdtqvmxpekarac"
+                            "christmas.copticchurch@gmail.com", "ctcdtqvmxpekarac"
                         )
                     }
                 })
@@ -126,15 +143,8 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
                     try {
                         //  attachmentPart.attachFile(file)
                         textPart.setText(
-                            "بكل التقدير نشكر سيادتكم لطلب دعوة حضور قداس عيد الميلاد المجيد ٢٠٢٣. " +
-                                    "\n" +
-                                    " ونحيط سيادتكم علماً بانه تم استلام بياناتكم وجاري العمل علي إصدار الدعوة الخاصه بكم" +
-                                    "\n" +
-                                    " سيتم التواصل مع سيادتكم بعد يوم ١ يناير ٢٠٢٣ من خلال رقم واتساب 01206019170 بشأن استلام الدعوة"
-                                    + "\n"
-                                    + "كل عام وحضراتكم بخير"
-                                    + "\n" +
-                                    "لجنة الدعوات.", StandardCharsets.UTF_8.name()
+                            "بكل التقدير نشكر سيادتكم لطلب دعوة حضور قداس عيد الميلاد المجيد ٢٠٢٣. " + "\n" + " ونحيط سيادتكم علماً بانه تم استلام بياناتكم وجاري العمل علي إصدار الدعوة الخاصه بكم" + "\n" + " سيتم التواصل مع سيادتكم بعد يوم ١ يناير ٢٠٢٣ من خلال رقم واتساب 01206019170 بشأن استلام الدعوة" + "\n" + "كل عام وحضراتكم بخير" + "\n" + "لجنة الدعوات.",
+                            StandardCharsets.UTF_8.name()
                         )
 
                         multipart.addBodyPart(textPart)
@@ -150,13 +160,8 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
 
                     try {
                         attachmentPart.attachFile(file)
-                        val message = "كل عام وانتم بخير" +
-                                "\n" +
-                                "مرحباً بكم في قداس عيد الميلاد المجيد بكاتدرائية ميلاد المسيح بالعاصمة الادارية الجديده" +
-                                "\n" +
-                                " ضرورة تقديم الدعوة الورقية مع الدعوة الالكترونية عند الدخول ولن يعتد باحدهما دون الاخري" +
-                                "\n" +
-                                "عيد سعيد"
+                        val message =
+                            "كل عام وانتم بخير" + "\n" + "مرحباً بكم في قداس عيد الميلاد المجيد بكاتدرائية ميلاد المسيح بالعاصمة الادارية الجديده" + "\n" + " ضرورة تقديم الدعوة الورقية مع الدعوة الالكترونية عند الدخول ولن يعتد باحدهما دون الاخري" + "\n" + "عيد سعيد"
                         textPart.setText(
                             message, StandardCharsets.UTF_8.name()
                         )
@@ -185,50 +190,63 @@ class ApplicationDetailsViewModel @Inject constructor() : ViewModel() {
 
     fun getApplicationDetailsByInvitation(invitationNumber: String) {
         _stateApplicationDetails.value = DataState(isLoading = true)
-        FirebaseDatabase.getInstance().reference
-            .addListenerForSingleValueEvent(
-                object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val application = snapshot.child(APPLICATIONS)
-                            .getValue(ApplicationPojo::class.java)
-
-                        var applicationPojo: ApplicationPojo? = null
-                        for (data in snapshot.child(APPLICATIONS).children) {
-                            applicationPojo = data.getValue(ApplicationPojo::class.java)
-                            if (applicationPojo?.invitationNumber == invitationNumber)
-                                break
-                        }
-
-                        val zoneList: MutableList<Zone> = ArrayList()
-                        val classesList: MutableList<Classes> = ArrayList()
-
-                        for (data in snapshot.child(CLASSES).children) {
-                            data.getValue(Classes::class.java)?.let {
-                                classesList.add(it)
-                            }
-                        }
-
-                        for (data in snapshot.child(ZONE).children) {
-                            data.getValue(Zone::class.java)?.let {
-                                zoneList.add(it)
-                            }
-                        }
-
-                        if (applicationPojo != null) {
-                            _stateApplicationDetails.value =
-                                DataState(data = DetailsData(application, zoneList, classesList))
-                        } else {
-                            _stateApplicationDetails.value =
-                                DataState(error = "رقم الدعوة غير صحيح")
-                        }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        _stateApplicationDetails.value = DataState(error = error.message)
-                    }
-
+        if (isOffline()) {
+            appDatabase.getApplication(invitationNumber).onEach {
+                if (it.isNotEmpty()) {
+                    _stateApplicationDetails.value = DataState(
+                        data = DetailsData(
+                            applicationPojo = it.last(), ArrayList(), ArrayList()
+                        )
+                    )
+                } else {
+                    _stateApplicationDetails.value = DataState(error = "رقم الدعوة غير صحيح")
                 }
-            )
+            }.launchIn(viewModelScope)
+        } else {
+            FirebaseDatabase.getInstance().reference.addListenerForSingleValueEvent(object :
+                ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+
+                    var applicationPojo: ApplicationPojo? = null
+                    for (data in snapshot.child(APPLICATIONS).children) {
+                        if (data.getValue(ApplicationPojo::class.java)?.invitationNumber == invitationNumber) {
+                            applicationPojo = data.getValue(ApplicationPojo::class.java)
+                        }
+                    }
+
+                    val zoneList: MutableList<Zone> = ArrayList()
+                    val classesList: MutableList<Classes> = ArrayList()
+
+                    for (data in snapshot.child(CLASSES).children) {
+                        data.getValue(Classes::class.java)?.let {
+                            classesList.add(it)
+                        }
+                    }
+
+                    for (data in snapshot.child(ZONE).children) {
+                        data.getValue(Zone::class.java)?.let {
+                            zoneList.add(it)
+                        }
+                    }
+
+                    if (applicationPojo != null) {
+                        _stateApplicationDetails.value = DataState(
+                            data = DetailsData(
+                                applicationPojo, zoneList, classesList
+                            )
+                        )
+                    } else {
+                        _stateApplicationDetails.value =
+                            DataState(error = "رقم الدعوة غير صحيح")
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _stateApplicationDetails.value = DataState(error = error.message)
+                }
+
+            })
+        }
     }
 
     fun resetViewModel() {

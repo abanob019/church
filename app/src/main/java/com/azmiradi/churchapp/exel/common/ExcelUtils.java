@@ -342,60 +342,79 @@ public class ExcelUtils {
                     Iterator<Cell> cellIterator = row.cellIterator();
 
                     while (cellIterator.hasNext()) {
-                        Cell cell = cellIterator.next();
+//                        Cell cell = cellIterator.next();
+//
+//                        if (index == 1)
+//                            applicationPojo.setClassName(cell.getStringCellValue());
+//
+//                        if (index == 2)
+//                            applicationPojo.setTitle(cell.getStringCellValue());
+//
+//                        if (index == 3)
+//                            applicationPojo.setChare(cell.getStringCellValue());
+//
+//                        if (index == 4)
+//                            applicationPojo.setJobTitle(cell.getStringCellValue());
+//
+//                        if (index == 5)
+//                            applicationPojo.setInvitationNumber(cell.getStringCellValue());
+//
+//                        if (index == 6)
+//                            applicationPojo.setZoneID(cell.getStringCellValue());
+//
+//                        if (index == 7)
+//                            applicationPojo.setClassName(cell.getStringCellValue());
+//
+//                        if (index == 8)
+//                            applicationPojo.setNationalID(cell.getStringCellValue());
+//
+//                        if (index == 9)
+//                            applicationPojo.setNote(cell.getStringCellValue());
+//
+//                        if (index == 10)
+//                            applicationPojo.setPriority((int) cell.getNumericCellValue());
+//
+//
+//                        if (index == 11)
+//                            applicationPojo.setApproved(cell.getBooleanCellValue());
+//
+//                        if (index == 12)
+//                            applicationPojo.setAttend(cell.getBooleanCellValue());
+//
+//                        if (index == 13)
+//                            applicationPojo.setPhone(cell.getStringCellValue());
+//
+//
+//                        if (index == 14)
+//                            applicationPojo.setImage1(cell.getStringCellValue());
+//
+//
+//                        if (index == 15)
+//                            applicationPojo.setImage2(cell.getStringCellValue());
 
-                        if (index == 1)
-                            applicationPojo.setClassName(cell.getStringCellValue());
+
+                        Cell cell = cellIterator.next();
+                        if (index == 1 && cell.getStringCellValue() != null
+                                && !cell.getStringCellValue().equals("")
+                                && cell.getStringCellValue().contains("/")) {
+                            String[] fullName = cell.getStringCellValue().split("/");
+                            applicationPojo.setTitle(fullName[0]);
+                            applicationPojo.setName(fullName[1]);
+                        }
 
                         if (index == 2)
-                            applicationPojo.setTitle(cell.getStringCellValue());
-
-                        if (index == 3)
-                            applicationPojo.setChare(cell.getStringCellValue());
-
-                        if (index == 4)
                             applicationPojo.setJobTitle(cell.getStringCellValue());
 
-                        if (index == 5)
+                        if (index == 4) {
                             applicationPojo.setInvitationNumber(cell.getStringCellValue());
-
-                        if (index == 6)
-                            applicationPojo.setZoneID(cell.getStringCellValue());
-
-                        if (index == 7)
-                            applicationPojo.setClassName(cell.getStringCellValue());
-
-                        if (index == 8)
-                            applicationPojo.setNationalID(cell.getStringCellValue());
-
-                        if (index == 9)
-                            applicationPojo.setNote(cell.getStringCellValue());
-
-                        if (index == 10)
-                            applicationPojo.setPriority((int) cell.getNumericCellValue());
-
-
-                        if (index == 11)
-                            applicationPojo.setApproved(cell.getBooleanCellValue());
-
-                        if (index == 12)
-                            applicationPojo.setAttend(cell.getBooleanCellValue());
-
-                        if (index == 13)
-                            applicationPojo.setPhone(cell.getStringCellValue());
-
-
-                        if (index == 14)
-                            applicationPojo.setImage1(cell.getStringCellValue());
-
-
-                        if (index == 15)
-                            applicationPojo.setImage2(cell.getStringCellValue());
+                         }
 
                         index++;
                     }
                 }
-                if (applicationPojo.getNationalID() != null && !applicationPojo.getNationalID().equals(""))
+                applicationPojo.setNationalID(Calendar.getInstance().getTimeInMillis() + "" + row.getRowNum());
+                applicationPojo.setApproved(true);
+                if (!applicationPojo.getNationalID().equals("") && applicationPojo.getName() != null)
                     importedExcelData.add(applicationPojo);
             }
 

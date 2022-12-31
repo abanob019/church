@@ -1,11 +1,10 @@
 package com.azmiradi.churchapp.main_screen
 
-import android.app.Activity
-import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
+import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -16,25 +15,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azmiradi.churchapp.NavigationDestination.ADD_CLASSES
 import com.azmiradi.churchapp.NavigationDestination.ADD_ZONE
 import com.azmiradi.churchapp.NavigationDestination.ALL_APPLICATIONS
+import com.azmiradi.churchapp.ProgressBar
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.journeyapps.barcodescanner.CaptureManager
-import com.journeyapps.barcodescanner.CompoundBarcodeView
-import io.github.g00fy2.quickie.QRResult
-import io.github.g00fy2.quickie.ScanQRCode
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
+
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(), onNavigate: (String) -> Unit
 ) {
+
+
     val cameraPermissionState = rememberMultiplePermissionsState(
         listOf(
             android.Manifest.permission.CAMERA,
@@ -42,65 +42,34 @@ fun MainScreen(
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     )
-
-    val scannedID = rememberSaveable {
-        mutableStateOf("")
-    }
-
-    val allScannedData = rememberSaveable {
-        mutableStateOf("")
-    }
-
-    val detailsDialog = rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    val detailsDialogOffline = rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    val isOffline = rememberSaveable {
-        mutableStateOf(false)
-    }
-
     val qrData = rememberSaveable {
         mutableStateOf("")
     }
 
-    val scanBarCode = rememberSaveable {
-        mutableStateOf(false)
+    ProgressBar(isShow = viewModel.stateUpdateData.value.isLoading)
+
+    val scanQrCodeLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+        if (result.contents == null) {
+            qrData.value = ""
+        } else {
+            qrData.value = result.contents
+        }
     }
 
+    val enableOffline = rememberSaveable {
+        mutableStateOf(viewModel.isOffline())
+    }
 
-    val context = LocalContext.current
-
-    val scanQrCodeLauncher = rememberLauncherForActivityResult(ScanQRCode()) { result ->
-        when (result) {
-            is QRResult.QRSuccess -> {
-                if (isOffline.value) {
-                    detailsDialogOffline.value = true
-                    qrData.value = result.content.rawValue
-                } else {
-                    val nationalId = result.content.rawValue.split("\n")[2].trim()
-                    scannedID.value = nationalId
-                    detailsDialog.value = true
-                    allScannedData.value = result.content.rawValue
-                }
-            }
-
-            is QRResult.QRError -> {
-                Toast.makeText(context, "الرمز غير صحيح", Toast.LENGTH_LONG).show()
-            }
-
-            is QRResult.QRMissingPermission -> {
-
-            }
-
-            is QRResult.QRUserCanceled -> {
-                Toast.makeText(context, "الرمز غير صحيح", Toast.LENGTH_LONG).show()
-            }
-        }
-
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        RadioButton(selected = enableOffline.value, onClick = {
+            enableOffline.value = !enableOffline.value
+            viewModel.setIsOffline(enableOffline.value)
+        })
+        Text(text = "Offline Mode")
     }
 
     Column(
@@ -117,20 +86,6 @@ fun MainScreen(
                 }) {
                 Text(
                     text = "المسجلين حتي الان", fontSize = 16.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 50.dp, start = 50.dp),
-                onClick = {
-                    isOffline.value = false
-                    scanQrCodeLauncher.launch(null)
-                }) {
-                Text(
-                    text = "كشف عن مستخدم", fontSize = 16.sp
                 )
             }
 
@@ -162,11 +117,11 @@ fun MainScreen(
                 .fillMaxWidth()
                 .padding(end = 50.dp, start = 50.dp),
                 onClick = {
-                    // isOffline.value = true
-                    //  scanQrCodeLauncher.launch(null)
-                    scanBarCode.value = true
+                    val options = ScanOptions()
+                    options.setPrompt("Scan a barcode")
+                    scanQrCodeLauncher.launch(options)
                 }) {
-                Text(text = "فحص اوفلاين", fontSize = 16.sp)
+                Text(text = "فحص", fontSize = 16.sp)
             }
         } else {
             Button(modifier = Modifier
@@ -182,68 +137,19 @@ fun MainScreen(
         }
     }
 
-    if (detailsDialog.value) {
+    if (qrData.value.isNotEmpty()) {
         Dialog(properties = DialogProperties(
             dismissOnBackPress = false, dismissOnClickOutside = false
         ), onDismissRequest = {
-            detailsDialog.value = false
+            qrData.value = ""
         }) {
-            ApplicationDetailsDialog(invitationNumber = scannedID.value,
+            ApplicationDetailsDialog(invitationNumber = qrData.value,
                 onAttend = {
-                    viewModel.sendMail(allScannedData.value, it)
-                    detailsDialog.value = false
-                },onBack = {
-                    detailsDialog.value = false
+                    qrData.value = ""
+                    //   viewModel.sendMail("", it)
+                }, onBack = {
+                    qrData.value = ""
                 })
         }
     }
-
-    if (detailsDialogOffline.value) {
-        Dialog(properties = DialogProperties(
-            dismissOnBackPress = false, dismissOnClickOutside = false
-        ), onDismissRequest = {
-            detailsDialog.value = false
-        }) {
-            val color = qrData.value.split("\n")[6].trim()
-            ApplicationDetailsDialog(data = qrData.value, color = color)
-        }
-    }
-
-    if (scanBarCode.value) {
-        Dialog(properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true
-        ), onDismissRequest = {
-            scanBarCode.value = false
-        }) {
-            StartScan(context) {
-                scanBarCode.value = false
-                detailsDialog.value = true
-                allScannedData.value = it
-            }
-        }
-    }
-}
-
-
-@Composable
-fun StartScan(context: Context, onScanned: (String) -> Unit) {
-    AndroidView(
-        factory = {
-            CompoundBarcodeView(context).apply {
-                val capture = CaptureManager(context as Activity, this)
-                capture.initializeFromIntent(context.intent, null)
-                this.setStatusText("")
-                capture.decode()
-                this.decodeContinuous { result ->
-                    result.text?.let { barCodeOrQr ->
-                        onScanned(barCodeOrQr)
-                    }
-                }
-                this.resume()
-                capture.onDestroy()
-            }
-        },
-        modifier = Modifier
-    )
 }

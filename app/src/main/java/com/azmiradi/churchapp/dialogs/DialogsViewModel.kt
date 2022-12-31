@@ -1,25 +1,26 @@
 package com.azmiradi.churchapp.dialogs
 
+import android.app.Application
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.azmiradi.churchapp.DataState
 import com.azmiradi.churchapp.FirebaseConstants
-import com.azmiradi.churchapp.all_applications.ApplicationPojo
-import com.azmiradi.churchapp.application_details.Classes
-import com.azmiradi.churchapp.application_details.Zone
+import com.azmiradi.churchapp.local_database.AppDatabase
+import com.azmiradi.churchapp.local_database.Zone
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class DialogsViewModel @Inject constructor() : ViewModel() {
+class DialogsViewModel @Inject constructor(val application: Application) : ViewModel() {
     private val _addState = mutableStateOf(DataState<Boolean>())
     val addState: State<DataState<Boolean>> = _addState
-
     fun <T> addData(t: T, root: String) {
         _addState.value = DataState(isLoading = true)
         val database = FirebaseDatabase.getInstance().reference.child(root)
@@ -40,6 +41,13 @@ class DialogsViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+
+    private val database=AppDatabase.getDatabase(application).zoneDao()
+    fun addLocalZone(zone: Zone){
+        viewModelScope.launch {
+            database.addZone(zone)
+        }
+    }
     private val _stateZones = mutableStateOf(DataState<List<Zone>>())
     val stateZones: State<DataState<List<Zone>>> = _stateZones
 

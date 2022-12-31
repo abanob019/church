@@ -1,6 +1,9 @@
 package com.azmiradi.churchapp.dialogs
 
 import android.widget.Toast
+import androidmads.library.qrgenearator.QRGContents
+import androidmads.library.qrgenearator.QRGEncoder
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,10 +18,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,10 +30,8 @@ import com.azmiradi.churchapp.FirebaseConstants.CLASSES
 import com.azmiradi.churchapp.FirebaseConstants.ZONE
 import com.azmiradi.churchapp.ProgressBar
 import com.azmiradi.churchapp.application_details.Classes
-import com.azmiradi.churchapp.application_details.Zone
-import com.github.skydoves.colorpicker.compose.ColorEnvelope
-import com.github.skydoves.colorpicker.compose.HsvColorPicker
-import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import com.azmiradi.churchapp.application_details.saveBitmap
+import com.azmiradi.churchapp.local_database.Zone
 
 @Composable
 fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(), onDismiss: () -> Unit) {
@@ -46,16 +47,37 @@ fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(), onDismiss: () -
             Toast.makeText(context, "فشل اتمام العمليه", Toast.LENGTH_LONG).show()
         }
     }
+    val zonesList = remember {
+        mutableStateListOf<Zone>()
+    }
+
     state.data?.let {
         LaunchedEffect(Unit) {
+            val data = "عيد الميلادالمجيد ٢٠٢٣" +
+                    "\n" +
+                    zonesList.last().zoneName +
+                    "\n" +
+                    zonesList.last().code +
+                    "\n" +
+                    zonesList.last().zoneColor +
+                    "\n" + zonesList.last().zoneID
+
+
+            val qrgEncoder = QRGEncoder(data, null, QRGContents.Type.TEXT, 150)
+            qrgEncoder.getBitmap(0).saveBitmap(
+                "/Invitations/ColorsQRs",
+                zonesList.last().zoneName + "_" +  zonesList.last().code + "_" +  zonesList.last().zoneColor,
+                context
+            )
+            {
+                println("DADADAD : " + it)
+            }
             onDismiss()
             Toast.makeText(context, "تمت العمليه بنجاح", Toast.LENGTH_LONG).show()
         }
     }
 
-    val zonesList = remember {
-        mutableStateListOf<Zone>()
-    }
+
     viewModel.stateZones.value.data?.let {
         LaunchedEffect(Unit) {
             zonesList.clear()
@@ -64,6 +86,10 @@ fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(), onDismiss: () -
     }
 
     val zoneName = rememberSaveable() {
+        mutableStateOf("")
+    }
+
+    val zoneCode = rememberSaveable() {
         mutableStateOf("")
     }
 
@@ -93,6 +119,16 @@ fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(), onDismiss: () -
                     Text(text = "اكتب اسم المنطقه")
                 })
             Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(),
+                value = zoneCode.value,
+                onValueChange = {
+                    zoneCode.value = it
+                },
+                placeholder = {
+                    Text(text = "كود المنطقة")
+                })
+
             Text(
                 text = "اختر لون المنطقه",
                 modifier = Modifier.fillMaxWidth(),
@@ -103,12 +139,13 @@ fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(), onDismiss: () -
             zoneColor.value = colors()
             Spacer(modifier = Modifier.height(20.dp))
             Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                if (zoneName.value.isNotEmpty()) {
+                if (zoneName.value.isNotEmpty() && zoneCode.value.isNotEmpty()) {
                     zonesList.add(
                         Zone(
                             zoneName = zoneName.value,
                             zoneColor = zoneColor.value,
-                            zoneID = zonesList.size
+                            zoneID = zonesList.last().zoneID+1,
+                            code = zoneCode.value
                         )
                     )
                     viewModel.addList(zonesList, ZONE)
@@ -117,7 +154,7 @@ fun AddZoneDialog(viewModel: DialogsViewModel = hiltViewModel(), onDismiss: () -
                 }
             }) {
                 Text(
-                    text = "ارسال", fontSize = 16.sp
+                    text = "حفظ", fontSize = 16.sp
                 )
             }
             Spacer(modifier = Modifier.height(20.dp))
@@ -190,11 +227,9 @@ fun colors(): String {
         mutableStateOf(ColorsZ.White.name)
     }
     LazyVerticalGrid(
-
         columns = GridCells.Fixed(4), content = {
             items(ColorsZ.values()) { item ->
                 Card(
-                    backgroundColor = item.color,
                     modifier = Modifier
                         .padding(5.dp)
                         .fillMaxWidth()
@@ -204,15 +239,22 @@ fun colors(): String {
                         },
                     elevation = 8.dp,
                 ) {
-                    if (selectedColor.value == item.name) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
+                    Box(Modifier.fillMaxSize()) {
+                        Image(
+                            painter = painterResource(id = item.colorID),
                             contentDescription = "",
-                            modifier = Modifier.padding(16.dp),
-                            tint = if (item != ColorsZ.White) Color.White else Color.Black
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.fillMaxSize()
                         )
+                        if (selectedColor.value == item.name) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "",
+                                modifier = Modifier.padding(16.dp),
+                                tint = if (item != ColorsZ.White) Color.White else Color.Black
+                            )
+                        }
                     }
-
                 }
             }
         })
