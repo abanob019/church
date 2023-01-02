@@ -17,10 +17,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.azmiradi.churchapp.ColorsZ
 import com.azmiradi.churchapp.ProgressBar
 import com.azmiradi.churchapp.all_applications.ApplicationPojo
 import com.azmiradi.churchapp.application_details.*
 import com.azmiradi.churchapp.local_database.Zone
+import com.azmiradi.churchapp.local_database.Zones
 
 @Composable
 fun ApplicationDetailsDialog(
@@ -48,7 +50,7 @@ fun ApplicationDetailsDialog(
         }
     }
 
-    if (state.error.isNotEmpty() ) {
+    if (state.error.isNotEmpty()) {
         LaunchedEffect(Unit) {
             Toast.makeText(context, state.error, Toast.LENGTH_LONG).show()
             viewModel.resetViewModel()
@@ -148,13 +150,28 @@ fun ApplicationDetailsDialog(
             CustomText(value = applicationPojo?.title ?: "----", title = "اللقب")
             CustomText(value = applicationPojo?.name ?: "----", title = "الاسم")
             CustomText(value = applicationPojo?.jobTitle ?: "----", title = "المسمي الوظيفي")
-            CustomText(value = applicationPojo?.nationalID ?: "----", title = "الرقم القومي")
-            CustomText(value = applicationPojo?.phone ?: "----", title = "رقم الهاتف")
             CustomText(value = applicationPojo?.employer ?: "----", title = "الجهة")
-            if (zones.isNotEmpty())
-                CustomText(value = zones[selectedZone.value].zoneName ?: "----", title = "المنطقه")
-            if (classes.isNotEmpty())
-                CustomText(value = classes[selectedZone.value].className ?: "----", title = "الفئة")
+
+            CustomText(value = Zones.values().find {
+                it.color.name.equals(applicationPojo?.zoneColorName ?: "", true)
+                        && it.code.equals(applicationPojo?.zoneCode ?: "", true)
+
+            }?.zoneName ?: "", title = "Zone")
+
+            CustomText(value = applicationPojo?.row ?: "----", title = "Row")
+            CustomText(value = applicationPojo?.seat ?: "----", title = "Seat")
+            CustomText(
+                value = (applicationPojo?.zoneColorName
+                    ?: "----") + " - " + (applicationPojo?.zoneCode ?: "----"), title = "Zone Color"
+            )
+
+            //CustomText(value = applicationPojo?.nationalID ?: "----", title = "الرقم القومي")
+            //  CustomText(value = applicationPojo?.phone ?: "----", title = "رقم الهاتف")
+
+//            if (zones.isNotEmpty())
+//                CustomText(value = zones[selectedZone.value].zoneName ?: "----", title = "المنطقه")
+//            if (classes.isNotEmpty())
+//                CustomText(value = classes[selectedZone.value].className ?: "----", title = "الفئة")
             CustomText(value = applicationPojo?.note ?: "----", title = "ملاحظات")
             CustomText(value = applicationPojo?.email ?: "----", title = "البريد")
             if (applicationPojo?.isApproved == true) {

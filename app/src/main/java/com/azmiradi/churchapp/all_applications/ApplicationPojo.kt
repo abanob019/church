@@ -21,12 +21,15 @@ data class ApplicationPojo(
     var image1: String? = null,
     var isAttend: Boolean? = null,
     var row: String? = null,
-    var chare: String? = null,
+    var seat: String? = null,
     var recomandedBy: String? = null,
     var priority: Int? = 0,
     var isSandedApproved: Boolean? = null,
     var invitationNumber: String? = null,
-)
+    var zoneCode: String? = null,
+    var zoneColorName: String? = null,
+
+    )
 {
     init {
 

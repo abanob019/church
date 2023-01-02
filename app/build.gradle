@@ -94,6 +94,10 @@ dependencies {
     implementation 'com.sun.mail:android-mail:1.6.4'
     implementation 'com.github.alexzhirkevich:custom-qr-generator:1.5.3'
     implementation files('libs/poi-3.7.jar')
+
+    implementation files('libs/jxl-2.6.12.jar')
+    implementation files('libs/log4j-1.2.14.jar')
+
     implementation 'com.github.onimur:handle-path-oz:1.0.7'
     implementation "com.google.accompanist:accompanist-permissions:0.19.0"
     implementation 'com.izettle:html2bitmap:1.9'
@@ -108,4 +112,5 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
     implementation 'com.google.mlkit:barcode-scanning:17.0.3'
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
 }

@@ -41,7 +41,7 @@ public class ExcelUtils {
 
 
     public static List<ApplicationPojo> readFromExcelWorkbook(File file) {
-        return retrieveExcelFromStorage(file);
+        return retrieveExcel(file);
     }
 
 
@@ -208,7 +208,7 @@ public class ExcelUtils {
 
             // Create Cells for each row
             cell = rowData.createCell(3);
-            cell.setCellValue(dataList.get(i).getChare());
+            cell.setCellValue(dataList.get(i).getSeat());
 
 
             // Create Cells for each row
@@ -318,6 +318,86 @@ public class ExcelUtils {
     }
 
 
+    private static List<ApplicationPojo> retrieveExcel(File file) {
+        importedExcelData = new ArrayList<>();
+
+        FileInputStream is = null;
+        try {
+            is = new FileInputStream(file);
+            jxl.Workbook workbook = jxl.Workbook.getWorkbook(is);
+
+            // Fetch sheet at position 'i' from the workbook
+            jxl.Sheet sheet = workbook.getSheet(0);
+            for (int i = 1; i < sheet.getRows(); i++) {
+
+                ApplicationPojo applicationPojo = new ApplicationPojo();
+
+                String namePlusTitle = sheet.getCell(1, i).getContents();
+                if (namePlusTitle.contains("/")) {
+                    String[] fullName = namePlusTitle.split("/");
+                    applicationPojo.setTitle(fullName[0]);
+                    applicationPojo.setName(fullName[1]);
+                } else {
+                    applicationPojo.setName(namePlusTitle);
+                }
+
+                String jobTitle = sheet.getCell(2, i).getContents();
+                applicationPojo.setJobTitle(jobTitle);
+
+                String nationalID = sheet.getCell(3, i).getContents();
+                applicationPojo.setNationalID(nationalID);
+
+                String employer = sheet.getCell(4, i).getContents();
+                applicationPojo.setEmployer(employer);
+
+                String invitationID = sheet.getCell(5, i).getContents();
+                applicationPojo.setInvitationNumber(invitationID);
+
+                String zoneCode = sheet.getCell(6, i).getContents();
+                applicationPojo.setZoneCode(zoneCode);
+
+                String zoneColor = sheet.getCell(7, i).getContents();
+                applicationPojo.setZoneColorName(zoneColor);
+
+                String raw = sheet.getCell(8, i).getContents();
+                applicationPojo.setRow(raw);
+
+                String seat = sheet.getCell(9, i).getContents();
+                applicationPojo.setSeat(seat);
+
+                if (nationalID.equals("")) {
+                    applicationPojo.setNationalID(Calendar.getInstance().getTimeInMillis() + "" + i);
+                }
+
+                applicationPojo.setApproved(true);
+                if (!applicationPojo.getNationalID().equals("") && applicationPojo.getName() != null
+                        && !applicationPojo.getName().equals(""))
+                    importedExcelData.add(applicationPojo);
+
+            }
+
+
+        } catch (
+                IOException e) {
+            Log.e(TAG, "Error Reading Exception: ", e);
+
+        } catch (
+                Exception e) {
+            Log.e(TAG, "Failed to read file due to Exception: ", e);
+
+        } finally {
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+        }
+        return importedExcelData;
+    }
+
     private static List<ApplicationPojo> retrieveExcelFromStorage(File file) {
         importedExcelData = new ArrayList<>();
 
@@ -329,6 +409,7 @@ public class ExcelUtils {
 
             // Create instance having reference to .xls file
             workbook = new HSSFWorkbook(fileInputStream);
+
 
             // Fetch sheet at position 'i' from the workbook
             sheet = workbook.getSheetAt(0);
@@ -342,77 +423,52 @@ public class ExcelUtils {
                     Iterator<Cell> cellIterator = row.cellIterator();
 
                     while (cellIterator.hasNext()) {
-//                        Cell cell = cellIterator.next();
-//
-//                        if (index == 1)
-//                            applicationPojo.setClassName(cell.getStringCellValue());
-//
-//                        if (index == 2)
-//                            applicationPojo.setTitle(cell.getStringCellValue());
-//
-//                        if (index == 3)
-//                            applicationPojo.setChare(cell.getStringCellValue());
-//
-//                        if (index == 4)
-//                            applicationPojo.setJobTitle(cell.getStringCellValue());
-//
-//                        if (index == 5)
-//                            applicationPojo.setInvitationNumber(cell.getStringCellValue());
-//
-//                        if (index == 6)
-//                            applicationPojo.setZoneID(cell.getStringCellValue());
-//
-//                        if (index == 7)
-//                            applicationPojo.setClassName(cell.getStringCellValue());
-//
-//                        if (index == 8)
-//                            applicationPojo.setNationalID(cell.getStringCellValue());
-//
-//                        if (index == 9)
-//                            applicationPojo.setNote(cell.getStringCellValue());
-//
-//                        if (index == 10)
-//                            applicationPojo.setPriority((int) cell.getNumericCellValue());
-//
-//
-//                        if (index == 11)
-//                            applicationPojo.setApproved(cell.getBooleanCellValue());
-//
-//                        if (index == 12)
-//                            applicationPojo.setAttend(cell.getBooleanCellValue());
-//
-//                        if (index == 13)
-//                            applicationPojo.setPhone(cell.getStringCellValue());
-//
-//
-//                        if (index == 14)
-//                            applicationPojo.setImage1(cell.getStringCellValue());
-//
-//
-//                        if (index == 15)
-//                            applicationPojo.setImage2(cell.getStringCellValue());
-
-
                         Cell cell = cellIterator.next();
-                        if (index == 1 && cell.getStringCellValue() != null
-                                && !cell.getStringCellValue().equals("")
-                                && cell.getStringCellValue().contains("/")) {
-                            String[] fullName = cell.getStringCellValue().split("/");
-                            applicationPojo.setTitle(fullName[0]);
-                            applicationPojo.setName(fullName[1]);
+                        if (index == 1) {
+                            if (cell.getStringCellValue().contains("/")) {
+                                String[] fullName = cell.getStringCellValue().split("/");
+                                applicationPojo.setTitle(fullName[0]);
+                                applicationPojo.setName(fullName[1]);
+                            } else {
+                                applicationPojo.setName(cell.getStringCellValue());
+                            }
                         }
 
                         if (index == 2)
                             applicationPojo.setJobTitle(cell.getStringCellValue());
 
-                        if (index == 4) {
+                        if (index == 3) {
+                            if (cell.getStringCellValue() != null && !cell.getStringCellValue().equals("")) {
+                                applicationPojo.setNationalID(cell.getStringCellValue());
+                            } else {
+                                applicationPojo.setNationalID(Calendar.getInstance().getTimeInMillis() + "" + row.getRowNum());
+                            }
+                        }
+
+                        if (index == 4)
+                            applicationPojo.setEmployer(cell.getStringCellValue());
+
+                        if (index == 5)
                             applicationPojo.setInvitationNumber(cell.getStringCellValue());
-                         }
+
+                        if (index == 6)
+                            applicationPojo.setZoneCode(cell.getStringCellValue());
+
+                        if (index == 7)
+                            applicationPojo.setZoneColorName(cell.getStringCellValue());
+
+                        if (index == 8)
+                            applicationPojo.setRow(cell.getStringCellValue());
+
+                        if (index == 9)
+                            applicationPojo.setSeat(cell.getStringCellValue());
+
+                        if (index == 10)
+                            applicationPojo.setPriority((int) cell.getNumericCellValue());
 
                         index++;
                     }
                 }
-                applicationPojo.setNationalID(Calendar.getInstance().getTimeInMillis() + "" + row.getRowNum());
                 applicationPojo.setApproved(true);
                 if (!applicationPojo.getNationalID().equals("") && applicationPojo.getName() != null)
                     importedExcelData.add(applicationPojo);

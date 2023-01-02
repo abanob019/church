@@ -174,7 +174,7 @@ fun ApplicationDetailsScreen(
 
             row.value = applicationPojo?.row ?: ""
 
-            char.value = applicationPojo?.chare ?: ""
+            char.value = applicationPojo?.seat ?: ""
             priority.value = (applicationPojo?.priority ?: 0).toString()
 
             title.value = applicationPojo?.title ?: ""
@@ -319,7 +319,7 @@ fun ApplicationDetailsScreen(
                             applicationPojo?.jobTitle = jobTitle.value
                             applicationPojo?.phone = phone.value
                             applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
-                            applicationPojo?.chare = char.value
+                            applicationPojo?.seat = char.value
                             applicationPojo?.row = row.value
                             applicationPojo?.let { viewModel.updateApplication(it) }
                         }) {
@@ -345,7 +345,7 @@ fun ApplicationDetailsScreen(
                             applicationPojo?.jobTitle = jobTitle.value
                             applicationPojo?.phone = phone.value
                             applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
-                            applicationPojo?.chare = char.value
+                            applicationPojo?.seat = char.value
                             applicationPojo?.row = row.value
                             applicationPojo?.let { viewModel.updateApplication(it) }
                         }) {
@@ -414,7 +414,7 @@ fun ApplicationDetailsScreen(
                     applicationPojo?.jobTitle = jobTitle.value
                     applicationPojo?.phone = phone.value
                     applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
-                    applicationPojo?.chare = char.value
+                    applicationPojo?.seat = char.value
                     applicationPojo?.row = row.value
                     applicationPojo?.let { viewModel.updateApplication(it) }
                     viewModel.sendMail(applicationPojo?.email ?: "", null)
@@ -511,7 +511,7 @@ fun createQRCode(
         .append(applicationPojo?.title + " : " + applicationPojo?.name).append("\n")
         .append(applicationPojo?.nationalID).append("\n")
         .append(zone?.zoneName ?: "").append(" - ").append(applicationPojo?.row ?: "").append(" - ")
-        .append(applicationPojo?.chare ?: "").append("\n")
+        .append(applicationPojo?.seat ?: "").append("\n")
         .append(applicationPojo?.employer)
         .append("\n").append(zone?.zoneColor ?: "")
 

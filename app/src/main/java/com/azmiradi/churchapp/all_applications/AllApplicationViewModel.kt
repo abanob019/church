@@ -118,7 +118,7 @@ class AllApplicationViewModel @Inject constructor() :
     ) {
         if (index == 0)
             _stateUpdateData.value = DataState(isLoading = true)
-        val ref = FirebaseDatabase.getInstance().reference.child(APPLICATIONS)
+        val ref = FirebaseDatabase.getInstance().reference.child("testtest")
         ref.child(toList[index].nationalID).setValue(toList[index])
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
