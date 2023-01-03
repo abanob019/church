@@ -1,6 +1,5 @@
 package com.azmiradi.churchapp.main_screen
 
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -10,9 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -27,13 +24,11 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 
-
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(), onNavigate: (String) -> Unit
 ) {
-
 
     val cameraPermissionState = rememberMultiplePermissionsState(
         listOf(
@@ -61,7 +56,7 @@ fun MainScreen(
     }
 
     Row(
-        Modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth().padding(top = 50.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -121,7 +116,7 @@ fun MainScreen(
                     options.setPrompt("Scan a barcode")
                     scanQrCodeLauncher.launch(options)
                 }) {
-                Text(text = "فحص", fontSize = 16.sp)
+                Text(text = "تسجيل حضور", fontSize = 16.sp)
             }
         } else {
             Button(modifier = Modifier

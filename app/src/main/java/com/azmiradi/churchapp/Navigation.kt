@@ -21,7 +21,16 @@ import com.azmiradi.churchapp.main_screen.MainScreen
 fun Navigation() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = MAIN) {
+    NavHost(navController = navController, startDestination = "splash_screen") {
+        composable("splash_screen") {
+            SplashScreen {
+                navController.navigate(it){
+                    popUpTo("splash_screen") {
+                        inclusive = true
+                    }
+                }
+            }
+        }
         composable(MAIN) {
             MainScreen(onNavigate = {
                 navController.navigate(it)
@@ -29,14 +38,14 @@ fun Navigation() {
         }
 
         composable(ALL_APPLICATIONS) {
-            AllApplicationsScreen(onNavigate = {destination,nationalID->
+            AllApplicationsScreen(onNavigate = { destination, nationalID ->
                 navController.navigate(destination.replace("{applicationID}", nationalID))
             })
         }
 
         composable(APPLICATION_DETAILS) {
             val applicationID = it.arguments?.getString("applicationID", "not_found") ?: "not_found"
-            ApplicationDetailsScreen(applicationID, onNavigation =  {
+            ApplicationDetailsScreen(applicationID, onNavigation = {
                 navController.navigate(it)
             })
         }

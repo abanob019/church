@@ -546,15 +546,14 @@ fun createQRCode(
 }
 
 
-@Preview
 @Composable
-fun CustomText(title: String = "title", value: String = "عزمي راضي عزمي") {
-    Text(
-        text = title, modifier = Modifier.fillMaxWidth(), fontSize = 14.sp, color = Color.DarkGray
-    )
-
-    Spacer(modifier = Modifier.height(10.dp))
-
+fun CustomText(title: String?=null , value: String) {
+    title?.let {
+        Text(
+            text = title, modifier = Modifier.fillMaxWidth(), fontSize = 14.sp, color = Color.DarkGray
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),

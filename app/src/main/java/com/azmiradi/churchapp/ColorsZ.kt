@@ -1,7 +1,6 @@
 package com.azmiradi.churchapp
 
 import androidx.annotation.DrawableRes
-import androidx.compose.ui.graphics.Color
 
 enum class ColorsZ(val number: Int, @DrawableRes val colorID: Int) {
     Black(0, R.drawable.black),
@@ -15,4 +14,6 @@ enum class ColorsZ(val number: Int, @DrawableRes val colorID: Int) {
     White(12, R.drawable.white),
     Orange(13, R.drawable.orange),
     SkyBlue(14, R.drawable.sky_blue),
+    LightGreen(14, R.drawable.light_green),
+    Beige(14, R.drawable.beige),
 }
