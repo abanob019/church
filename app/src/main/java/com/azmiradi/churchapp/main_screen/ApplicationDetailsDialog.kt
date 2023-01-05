@@ -24,6 +24,7 @@ import com.azmiradi.churchapp.all_applications.ApplicationPojo
 import com.azmiradi.churchapp.application_details.*
 import com.azmiradi.churchapp.local_database.Zone
 import com.azmiradi.churchapp.local_database.Zones
+import java.util.Calendar
 
 @Composable
 fun ApplicationDetailsDialog(
@@ -109,9 +110,9 @@ fun ApplicationDetailsDialog(
             }
 
             color.value =
-                Zones.values().find {
-                    it.color.name.equals(applicationPojo?.zoneColorName ?: "black", true)
-                }?.color?.colorID
+                ColorsZ.values().find {
+                    it.name.equals(applicationPojo?.zoneColorName?.trim() ?: "black", true)
+                }?.colorID
         }
     }
 
@@ -164,7 +165,9 @@ fun ApplicationDetailsDialog(
             CustomText(value = applicationPojo?.employer ?: "----")
 
             CustomText(
-                value =(applicationPojo?.seat ?: "----") +"-"+(applicationPojo?.row ?: "----")+"-"+(applicationPojo?.zoneColorName ?: "----")+"-"+(applicationPojo?.zoneCode ?: "----"), title = "Zone Details"
+                value = (applicationPojo?.seat ?: "----") + "-" + (applicationPojo?.row
+                    ?: "----") + "-" + (applicationPojo?.zoneColorName
+                    ?: "----") + "-" + (applicationPojo?.zoneCode ?: "----"), title = "Zone Details"
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -172,14 +175,15 @@ fun ApplicationDetailsDialog(
 
             color.value?.let {
                 Image(
-                    painter = painterResource(id =it),
+                    painter = painterResource(id = it),
                     contentDescription = "",
                     modifier = Modifier
                         .size(150.dp)
                         .border(5.dp, Color.Black)
                         .clip(
                             RoundedCornerShape(8.dp)
-                        ))
+                        )
+                )
             }
 
 
@@ -212,8 +216,13 @@ fun ApplicationDetailsDialog(
                         .weight(1f)
                         .padding(start = 10.dp),
                         onClick = {
-                            applicationPojo?.isAttend = true
-                            applicationPojo?.let { viewModel.updateApplication(it) }
+                            if (applicationPojo?.isAttend != true) {
+                                applicationPojo?.isAttend = true
+                                applicationPojo?.attendDate = Calendar.getInstance().timeInMillis
+                                applicationPojo?.let { viewModel.updateApplication(it) }
+                            } else {
+                                onAttend(applicationPojo?.email ?: "")
+                            }
                         }) {
                         Text(
                             text = "تسجيل حضور", fontSize = 16.sp
@@ -226,35 +235,3 @@ fun ApplicationDetailsDialog(
     }
 }
 
-
-@Composable
-fun ApplicationDetailsDialog(data: String, color: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        backgroundColor = Color.White
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(end = 20.dp, start = 20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Text(text = data)
-
-            val color = remember {
-                android.graphics.Color.parseColor("#$color")
-            }
-            Card(
-                modifier = Modifier.size(100.dp),
-                backgroundColor = Color(color)
-            ) {
-
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-        }
-    }
-}

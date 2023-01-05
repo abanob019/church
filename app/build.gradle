@@ -16,8 +16,8 @@ android {
         applicationId "com.azmiradi.churchapp"
         minSdk 26
         targetSdk 33
-        versionCode 1
-        versionName "1.0"
+        versionCode 5
+        versionName "5.0"
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments += [
@@ -113,4 +113,6 @@ dependencies {
     implementation 'com.google.mlkit:barcode-scanning:17.0.3'
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 
+    implementation 'com.rollbar:rollbar-java:1.+'
+    implementation 'com.rollbar:rollbar-android:1.+@aar'
 }

@@ -10,7 +10,7 @@ enum class Zones(val id: Int, val zoneName: String, val code: String, val color:
     Zone5(1222325, "Diplomats", "R", ColorsZ.Yellow),//
     Zone6(1222326, "هيئات حكومية", "H", ColorsZ.Brown),//
     Zone7(1222327, "شخصيات عامة", "C", ColorsZ.Orange),
-    Zone8(1222328, "رؤساء هيئات قضائية", "E", ColorsZ.Gray),//
+    Zone8(1222328, "رؤساء هيئات قضائية", "E", ColorsZ.Grey),//
     Zone9(1222329, "مجلسي النواب والشيوخ", "G", ColorsZ.Red),//
     Zone10(1222330, "رؤساء احزاب واعلاميين", "N", ColorsZ.SkyBlue),//
     Zone11(1222331, "شخصيات عامة", "A", ColorsZ.Purple),//

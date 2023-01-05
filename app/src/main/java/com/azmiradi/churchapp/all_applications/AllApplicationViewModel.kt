@@ -1,6 +1,7 @@
 package com.azmiradi.churchapp.all_applications
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -29,8 +30,7 @@ class AllApplicationViewModel @Inject constructor() :
 
     private val _stateClasses = mutableStateOf(DataState<List<Classes>>())
     val stateClasses: State<DataState<List<Classes>>> = _stateClasses
-    var allApplications: List<ApplicationPojo> = ArrayList()
-
+    var allApplications = mutableStateListOf<ApplicationPojo>()
 
     fun getApplications() {
         _stateApplications.value = DataState(isLoading = true)
@@ -63,7 +63,8 @@ class AllApplicationViewModel @Inject constructor() :
                     }
                 }
 
-                allApplications = dataList
+                allApplications.clear()
+                allApplications.addAll(dataList)
                 _stateApplications.value = DataState(data = dataList)
                 _stateClasses.value = DataState(data = classesList)
                 _stateZones.value = DataState(data = zoneList)
@@ -77,37 +78,41 @@ class AllApplicationViewModel @Inject constructor() :
     }
 
     fun getApplications(type: ApplicationsType, keyWord: String = "") {
-        val data = when (type) {
-            ApplicationsType.All -> {
-                allApplications
-            }
-            ApplicationsType.Active -> {
-                allApplications.filter {
-                    it.isApproved == true
+        if (allApplications.isNotEmpty())
+        {
+            val data = when (type) {
+                ApplicationsType.All -> {
+                    allApplications
                 }
-            }
-            ApplicationsType.DisActive -> {
-                allApplications.filter {
-                    it.isApproved != true
+                ApplicationsType.Active -> {
+                    allApplications.filter {
+                        it.isApproved == true
+                    }
                 }
-            }
+                ApplicationsType.DisActive -> {
+                    allApplications.filter {
+                        it.isApproved != true
+                    }
+                }
 
-            ApplicationsType.Attended -> {
-                allApplications.filter {
-                    it.isAttend == true
+                ApplicationsType.Attended -> {
+                    allApplications.filter {
+                        it.isAttend == true
+                    }.sortedByDescending {
+                        it.attendDate
+                    }
                 }
             }
+            if (keyWord.isEmpty()|| keyWord.isBlank())
+                _stateApplications.value = DataState(data = data)
+            else
+                _stateApplications.value = DataState(data = data.filter {
+                    it.name?.contains(keyWord) == true
+                            || it.title?.contains(keyWord) == true
+                            || it.jobTitle?.contains(keyWord) == true
+                            || it.employer?.contains(keyWord) == true
+                })
         }
-        if (keyWord.isEmpty()|| keyWord.isBlank())
-            _stateApplications.value = DataState(data = data)
-        else
-            _stateApplications.value = DataState(data = data.filter {
-                it.name?.contains(keyWord) == true
-                        || it.title?.contains(keyWord) == true
-                        || it.jobTitle?.contains(keyWord) == true
-                        || it.employer?.contains(keyWord) == true
-            })
-
     }
 
     private val _stateUpdateData = mutableStateOf(DataState<Boolean>())

@@ -8,11 +8,13 @@ import androidx.navigation.compose.rememberNavController
 import com.azmiradi.churchapp.NavigationDestination.ADD_CLASSES
 import com.azmiradi.churchapp.NavigationDestination.ADD_ZONE
 import com.azmiradi.churchapp.NavigationDestination.ALL_APPLICATIONS
+import com.azmiradi.churchapp.NavigationDestination.ALL_ATTENDED
 import com.azmiradi.churchapp.NavigationDestination.APPLICATION_DETAILS
 import com.azmiradi.churchapp.NavigationDestination.MAIN
 import com.azmiradi.churchapp.NavigationDestination.SCAN_ID
 import com.azmiradi.churchapp.all_applications.AllApplicationsScreen
 import com.azmiradi.churchapp.application_details.ApplicationDetailsScreen
+import com.azmiradi.churchapp.attendence.AttendedScreen
 import com.azmiradi.churchapp.dialogs.AddClassDialog
 import com.azmiradi.churchapp.dialogs.AddZoneDialog
 import com.azmiradi.churchapp.main_screen.MainScreen
@@ -24,7 +26,7 @@ fun Navigation() {
     NavHost(navController = navController, startDestination = "splash_screen") {
         composable("splash_screen") {
             SplashScreen {
-                navController.navigate(it){
+                navController.navigate(it) {
                     popUpTo("splash_screen") {
                         inclusive = true
                     }
@@ -60,6 +62,11 @@ fun Navigation() {
                 navController.popBackStack()
             }
         }
+        composable(ALL_ATTENDED) {
+            AttendedScreen(onNavigate = { destination, nationalID ->
+                navController.navigate(destination.replace("{applicationID}", nationalID))
+            })
+        }
     }
 }
 
@@ -71,6 +78,8 @@ object NavigationDestination {
     const val MAIN = "main"
     const val ADD_CLASSES = "add_classes"
     const val ADD_ZONE = "add_zone"
+    const val ALL_ATTENDED = "all_attended"
+
 
 }
 

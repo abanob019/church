@@ -18,7 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Church"
         tools:targetApi="31">
-
+        <meta-data android:name="com.rollbar.android.ACCESS_TOKEN"
+            android:value="636b9c697bc1448986dbad6d7cab6d4f" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

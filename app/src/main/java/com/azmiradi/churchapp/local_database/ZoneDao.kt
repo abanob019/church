@@ -19,4 +19,7 @@ interface ZoneDao {
 
     @Query("SELECT * FROM zone where zoneID= :id")
     fun getZoneByID(id: String): Flow<List<Zone>>
+
+    @Query("DELETE FROM zone")
+    suspend fun deleteZones()
 }

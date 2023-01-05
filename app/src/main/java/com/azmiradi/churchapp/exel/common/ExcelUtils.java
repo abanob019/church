@@ -340,6 +340,9 @@ public class ExcelUtils {
                 } else {
                     applicationPojo.setName(namePlusTitle);
                 }
+//                String email = sheet.getCell(3, i).getContents();
+//                applicationPojo.setEmail(email);
+
 
                 String jobTitle = sheet.getCell(2, i).getContents();
                 applicationPojo.setJobTitle(jobTitle);
@@ -365,13 +368,12 @@ public class ExcelUtils {
                 String seat = sheet.getCell(9, i).getContents();
                 applicationPojo.setSeat(seat);
 
-                if (nationalID.equals("")) {
-                    applicationPojo.setNationalID(Calendar.getInstance().getTimeInMillis() + "" + i);
-                }
+                applicationPojo.setNationalID(Calendar.getInstance().getTimeInMillis() + "" + i);
+
 
                 applicationPojo.setApproved(true);
-                if (!applicationPojo.getNationalID().equals("") && applicationPojo.getName() != null
-                        && !applicationPojo.getName().equals(""))
+                if (applicationPojo.getEmail() != null
+                        && !applicationPojo.getEmail().equals(""))
                     importedExcelData.add(applicationPojo);
 
             }

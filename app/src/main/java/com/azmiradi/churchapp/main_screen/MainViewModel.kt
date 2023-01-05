@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azmiradi.churchapp.DataState
 import com.azmiradi.churchapp.FirebaseConstants.APPLICATIONS
+import com.azmiradi.churchapp.FirebaseConstants.ZONE
 import com.azmiradi.churchapp.all_applications.ApplicationPojo
 import com.azmiradi.churchapp.local_database.AppDatabase
 import com.azmiradi.churchapp.local_database.PreferenceHelper
@@ -37,19 +38,15 @@ class MainViewModel @Inject constructor(val application: Application) : ViewMode
     val stateSendMail: State<DataState<Boolean>> = _stateSendMail
     var job: Job? = null
 
-    val appDatabase = AppDatabase.getDatabase(application).applicationDao()
+    val applicationsDB = AppDatabase.getDatabase(application).applicationDao()
 
     init {
         if (!PreferenceHelper.customPreference(application).isOffline)
             getApplications()
     }
 
-    private val database = AppDatabase.getDatabase(application).zoneDao()
-    fun addLocalZone(zone: Zone) {
-        viewModelScope.launch {
-            database.addZone(zone)
-        }
-    }
+    private val zonesDB = AppDatabase.getDatabase(application).zoneDao()
+
 
     var uploadSavedDataJob: Job? = null
 
@@ -57,7 +54,7 @@ class MainViewModel @Inject constructor(val application: Application) : ViewMode
     fun setIsOffline(isOffline: Boolean) {
         if (!isOffline) {
             uploadSavedDataJob = viewModelScope.launch(Dispatchers.IO) {
-                job = appDatabase.getApplications()
+                job = applicationsDB.getApplications()
                     .onEach {
                         val data = it.filter { obj ->
                             obj.isAttend == true
@@ -133,21 +130,31 @@ class MainViewModel @Inject constructor(val application: Application) : ViewMode
 
     }
 
-
     private fun getApplications() {
-        FirebaseDatabase.getInstance().getReference(APPLICATIONS).addListenerForSingleValueEvent(
+        FirebaseDatabase.getInstance().reference.addListenerForSingleValueEvent(
             object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val dataList: MutableList<ApplicationPojo> = ArrayList()
 
-                    for (dataSnap in snapshot.children) {
+                    for (dataSnap in snapshot.child(APPLICATIONS).children) {
                         dataSnap.getValue(ApplicationPojo::class.java)?.let {
                             dataList.add(it)
                         }
                     }
+
+                    val zonesList: MutableList<Zone> = ArrayList()
+
+                    for (dataSnap in snapshot.child(ZONE).children) {
+                        dataSnap.getValue(Zone::class.java)?.let {
+                            zonesList.add(it)
+                        }
+                    }
+
                     viewModelScope.launch(Dispatchers.IO) {
-                        appDatabase.deleteApplications()
-                        appDatabase.addApplications(dataList.map {
+                        zonesDB.deleteZones()
+                        applicationsDB.deleteApplications()
+                        zonesDB.addZones(zonesList)
+                        applicationsDB.addApplications(dataList.map {
                             it.copy(isAttend = false)
                         })
                     }

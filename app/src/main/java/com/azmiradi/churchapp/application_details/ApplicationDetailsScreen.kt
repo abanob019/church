@@ -375,7 +375,8 @@ fun ApplicationDetailsScreen(
                             image?.let {
                                 viewModel.sendMail(
                                     applicationPojo?.email ?: "",
-                                    File(RealPathUtil.getRealPath(context, image).toString())
+                                    File(RealPathUtil.getRealPath(context, image).toString()),
+                                    name = applicationPojo?.name ?: ""
                                 )
                             }
 
@@ -496,7 +497,7 @@ fun Context.prepareInvitation(applicationName: String, qrImage: String): Bitmap?
 
     val html = String(buffer)
     val fullImage = html.replace("APPLICATION_NAME", applicationName)
-        .replace("QR_IMAGE", qrImage)
+      //  .replace("QR_IMAGE", qrImage)
     return Html2Bitmap.Builder().setContext(this).setBitmapWidth(1182).setContent(html(fullImage))
         .build().bitmap
 }
@@ -547,10 +548,13 @@ fun createQRCode(
 
 
 @Composable
-fun CustomText(title: String?=null , value: String) {
+fun CustomText(title: String? = null, value: String) {
     title?.let {
         Text(
-            text = title, modifier = Modifier.fillMaxWidth(), fontSize = 14.sp, color = Color.DarkGray
+            text = title,
+            modifier = Modifier.fillMaxWidth(),
+            fontSize = 14.sp,
+            color = Color.DarkGray
         )
         Spacer(modifier = Modifier.height(10.dp))
     }

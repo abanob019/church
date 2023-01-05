@@ -8,7 +8,7 @@ import com.azmiradi.churchapp.all_applications.ApplicationPojo
 
 @Database(
     entities = [ApplicationPojo::class, Zone::class],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -39,8 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
                 application,
                 AppDatabase::class.java,
                 "applications_database"
-            )
-                .build()
+            ).build()
         }
     }
 }

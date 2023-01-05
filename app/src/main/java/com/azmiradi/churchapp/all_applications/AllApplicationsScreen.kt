@@ -52,11 +52,8 @@ import kotlin.collections.ArrayList
 @Composable
 fun AllApplicationsScreen(
     viewModel: AllApplicationViewModel = hiltViewModel(),
-
     onNavigate: (String, String) -> Unit
 ) {
-
-
     val state = viewModel.stateApplications.value
     val stateSaveData = viewModel.stateUpdateData.value
 

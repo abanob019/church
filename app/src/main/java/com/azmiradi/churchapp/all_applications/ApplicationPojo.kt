@@ -28,6 +28,8 @@ data class ApplicationPojo(
     var invitationNumber: String? = null,
     var zoneCode: String? = null,
     var zoneColorName: String? = null,
+    var attendDate: Long? = null,
+
 
     )
 {

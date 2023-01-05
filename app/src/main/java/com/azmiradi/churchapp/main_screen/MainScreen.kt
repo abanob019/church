@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.azmiradi.churchapp.NavigationDestination.ADD_CLASSES
 import com.azmiradi.churchapp.NavigationDestination.ADD_ZONE
 import com.azmiradi.churchapp.NavigationDestination.ALL_APPLICATIONS
+import com.azmiradi.churchapp.NavigationDestination.ALL_ATTENDED
 import com.azmiradi.churchapp.ProgressBar
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -56,7 +57,9 @@ fun MainScreen(
     }
 
     Row(
-        Modifier.fillMaxWidth().padding(top = 50.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 50.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -118,6 +121,17 @@ fun MainScreen(
                 }) {
                 Text(text = "تسجيل حضور", fontSize = 16.sp)
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 50.dp, start = 50.dp),
+                onClick = {
+                    onNavigate(ALL_ATTENDED)
+                }) {
+                Text(text = "متابعة الحضور", fontSize = 16.sp)
+            }
         } else {
             Button(modifier = Modifier
                 .fillMaxWidth()
@@ -141,7 +155,7 @@ fun MainScreen(
             ApplicationDetailsDialog(invitationNumber = qrData.value,
                 onAttend = {
                     qrData.value = ""
-                    //   viewModel.sendMail("", it)
+
                 }, onBack = {
                     qrData.value = ""
                 })
