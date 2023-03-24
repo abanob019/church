@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace 'com.azmiradi.churchapp'
+    namespace 'com.azmiradi.easter'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.azmiradi.churchapp"
+        applicationId "com.azmiradi.easter"
         minSdk 26
         targetSdk 33
         versionCode 5
@@ -34,7 +34,12 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        build {
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

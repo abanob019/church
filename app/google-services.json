@@ -1,42 +1,34 @@
 {
   "project_info": {
-    "project_number": "672276417663",
-    "firebase_url": "https://christmas-coptic-church-default-rtdb.firebaseio.com",
-    "project_id": "christmas-coptic-church",
-    "storage_bucket": "christmas-coptic-church.appspot.com"
+    "project_number": "732740180153",
+    "firebase_url": "https://app-easter-default-rtdb.firebaseio.com",
+    "project_id": "app-easter",
+    "storage_bucket": "app-easter.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:672276417663:android:e3ffa5014086a58d73834a",
+        "mobilesdk_app_id": "1:732740180153:android:26f88a8b0157533c63e368",
         "android_client_info": {
-          "package_name": "com.azmiradi.churchapp"
+          "package_name": "com.azmiradi.easter"
         }
       },
       "oauth_client": [
         {
-          "client_id": "672276417663-pbi4c7gci3q2fb6v68nml6k9da7m26be.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.azmiradi.churchapp",
-            "certificate_hash": "a2996c6c54be132351c5acf1a4591e7ca1e3d986"
-          }
-        },
-        {
-          "client_id": "672276417663-etg6046moiqt44v28fd33rd2c5irbp0q.apps.googleusercontent.com",
+          "client_id": "732740180153-kqi5vsrsaet8nrnpiguqv7gjit647erg.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBa1DAM3DxKvpMy5cVYqfJlvu4EL1-SNf4"
+          "current_key": "AIzaSyCiVckTH5WQirAF8Z6-c4h99juIjJC761I"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "672276417663-etg6046moiqt44v28fd33rd2c5irbp0q.apps.googleusercontent.com",
+              "client_id": "732740180153-kqi5vsrsaet8nrnpiguqv7gjit647erg.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
