@@ -144,9 +144,9 @@ fun ApplicationDetailsScreen(
     val jobTitle = remember {
         mutableStateOf("")
     }
-    val nationalID = remember {
-        mutableStateOf("")
-    }
+//    val nationalID = remember {
+//        mutableStateOf("")
+//    }
     val employer = remember {
         mutableStateOf(0)
     }
@@ -187,7 +187,7 @@ fun ApplicationDetailsScreen(
             title.value = applicationPojo?.title ?: ""
             name.value = applicationPojo?.name ?: ""
             jobTitle.value = applicationPojo?.jobTitle ?: ""
-            nationalID.value = applicationPojo?.nationalID ?: ""
+           // nationalID.value = applicationPojo?.nationalID ?: ""
             phone.value = applicationPojo?.phone ?: ""
 
             applicationPojo?.employer?.let {
@@ -271,22 +271,24 @@ fun ApplicationDetailsScreen(
 
             CustomTextFile(data = jobTitle, title = "المسمي الوظيفي", keyboard = KeyboardType.Text)
 
-            CustomText(value = applicationPojo?.row ?: "------", title = "الصف")
+         //   CustomText(value = applicationPojo?.row ?: "------", title = "الصف")
 
-            CustomText(value = applicationPojo?.seat ?: "------", title = "الكرسي")
+          //  CustomText(value = applicationPojo?.seat ?: "------", title = "الكرسي")
 
-            CustomText(value = applicationPojo?.zoneName ?: "------", title = "اللون")
+            CustomText(value = applicationPojo?.zoneName ?: "------", title = "اسم المنطقة")
 
-            CustomTextFile(data = nationalID, title = "الرقم القومي", keyboard = KeyboardType.Text)
+            CustomText(value = applicationPojo?.zoneColor ?: "------", title = "لون المنطقة")
 
-            CustomTextFile(data = phone, title = "رقم الهاتف", keyboard = KeyboardType.Text)
+            //CustomTextFile(data = nationalID, title = "الرقم القومي", keyboard = KeyboardType.Text)
 
-            SampleSpinner(
-                "الجهة", list = listOfEmployer, employer.value
-            ) {
-                employer.value = it
-            }
-            CustomTextFile(data = priority, title = "الاولوية", keyboard = KeyboardType.Decimal)
+           // CustomTextFile(data = phone, title = "رقم الهاتف", keyboard = KeyboardType.Text)
+
+//            SampleSpinner(
+//                "الجهة", list = listOfEmployer, employer.value
+//            ) {
+//                employer.value = it
+//            }
+          //  CustomTextFile(data = priority, title = "الاولوية", keyboard = KeyboardType.Decimal)
 
 //            SampleSpinner(
 //                "نوع الدعوة", list = classes.mapNotNull {
@@ -328,7 +330,7 @@ fun ApplicationDetailsScreen(
                             applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
                             applicationPojo?.title = title.value
                             applicationPojo?.name = name.value
-                            applicationPojo?.nationalID = nationalID.value
+                           // applicationPojo?.nationalID = nationalID.value
                             applicationPojo?.jobTitle = jobTitle.value
                             applicationPojo?.phone = phone.value
                             applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
@@ -354,13 +356,13 @@ fun ApplicationDetailsScreen(
                             applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
                             applicationPojo?.title = title.value
                             applicationPojo?.name = name.value
-                            applicationPojo?.nationalID = nationalID.value
+                           // applicationPojo?.nationalID = nationalID.value
                             applicationPojo?.jobTitle = jobTitle.value
                             applicationPojo?.phone = phone.value
                             applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
                             applicationPojo?.seat = char.value
                             applicationPojo?.row = row.value
-                            applicationPojo?.let { viewModel.updateApplication(it) }
+                      //      applicationPojo?.let { viewModel.updateApplication(it) }
                         }) {
                         Text(
                             text = "الغاء تفعيل الدعوة", fontSize = 16.sp
@@ -386,12 +388,12 @@ fun ApplicationDetailsScreen(
 //                                ).show()
 //                            }
                             qrBitmap.value?.let {
-                                viewModel.sendMail(
-                                    applicationPojo?.email ?: "", File(
-                                        RealPathUtil.getRealPath(context, qrPath.value.toUri())
-                                            .toString()
-                                    ), name = applicationPojo?.name ?: ""
-                                )
+//                                viewModel.sendMail(
+//                                    applicationPojo?.email ?: "", File(
+//                                        RealPathUtil.getRealPath(context, qrPath.value.toUri())
+//                                            .toString()
+//                                    ), name = applicationPojo?.name ?: ""
+//                                )
                             }
 
                         }) {
@@ -406,7 +408,8 @@ fun ApplicationDetailsScreen(
                             qrBitmap.value?.let {
                                 context.sendInvitationViaWhatsApp(
                                     qrPath.value, "01222369185",
-                                    applicationPojo?.name ?: ""
+                                    applicationPojo?.name ?: "",
+                                    applicationPojo?.invitationNumber ?: ""
                                 )
                             }
                         }) {
@@ -425,14 +428,14 @@ fun ApplicationDetailsScreen(
                     applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
                     applicationPojo?.title = title.value
                     applicationPojo?.name = name.value
-                    applicationPojo?.nationalID = nationalID.value
+                    //applicationPojo?.nationalID = nationalID.value
                     applicationPojo?.jobTitle = jobTitle.value
                     applicationPojo?.phone = phone.value
                     applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
                     applicationPojo?.seat = char.value
                     applicationPojo?.row = row.value
                     applicationPojo?.let { viewModel.updateApplication(it) }
-                    viewModel.sendMail(applicationPojo?.email ?: "", null)
+                   // viewModel.sendMail(applicationPojo?.email ?: "", null)
                 }) {
                     Text(
                         text = "الموافق علي الدعوه", fontSize = 16.sp
@@ -444,7 +447,12 @@ fun ApplicationDetailsScreen(
     }
 }
 
-private fun Context.sendInvitationViaWhatsApp(imgUri: String, phone: String, name: String) {
+private fun Context.sendInvitationViaWhatsApp(
+    imgUri: String,
+    phone: String,
+    name: String,
+    number: String
+) {
 //    val path: String =
 //        MediaStore.Images.Media.insertImage(
 //            contentResolver, imgUri,
@@ -454,7 +462,7 @@ private fun Context.sendInvitationViaWhatsApp(imgUri: String, phone: String, nam
     val uri = Uri.parse(imgUri)
 
     val whatsAppLink = "2$phone@s.whatsapp.net"
-    val message = "دعوة السيد : $name"
+    val message = "دعوة السيد : $name رقم الدعوة $number"
     val sendIntent = Intent(Intent.ACTION_SEND)
     sendIntent.type = "text/plain"
     sendIntent.putExtra(Intent.EXTRA_TEXT, message)
@@ -522,7 +530,6 @@ fun createQRCode(
             .append("\n").append(applicationPojo?.nationalID).append("\n")
             .append(applicationPojo?.zoneName ?: "").append(" - ").append(applicationPojo?.employer)
             .append("\n").append(applicationPojo?.zoneColor ?: "")
-    println("Data::: " + data)
 
 //    val options = QrOptions.Builder(115)
 //        .setColors(

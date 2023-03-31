@@ -148,7 +148,7 @@ fun AllApplicationsScreen(
             }
             Divider(color = Color.White, thickness = 1.dp)
             SearchView {
-                viewModel.getApplications(type = ApplicationsType.values().find {type->
+                viewModel.getApplications(type = ApplicationsType.values().find { type ->
                     selectedIndex.value == type.id
                 } ?: ApplicationsType.All, it)
             }
@@ -218,6 +218,11 @@ fun AllApplicationsScreen(
                     )
                 }
             }
+            Text(
+                text = "عدد الدعوات : " + applicationsList.size, fontSize = 16.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
             ShowItems(selectedIndex, selectedApplications, applicationsList, onClick = {
                 onNavigate(APPLICATION_DETAILS, it)
             })
@@ -347,15 +352,15 @@ fun ApplicationItem(
             .fillMaxWidth()
             .padding(10.dp)
             .combinedClickable(onClick = {
-                if (selectedApplications?.contains(applicationPojo) == true) selectedApplications.remove(
-                    applicationPojo
-                )
-                else selectedApplications?.add(applicationPojo)
-
-            }, onLongClick = {
+//                if (selectedApplications?.contains(applicationPojo) == true) selectedApplications.remove(
+//                    applicationPojo
+//                )
+//                else selectedApplications?.add(applicationPojo)
                 if (onLongClick != null) {
                     onLongClick(applicationPojo.nationalID ?: "")
                 }
+            }, onLongClick = {
+
             }),
         backgroundColor = if (selectable && selectedApplications?.contains(applicationPojo) == true) SelectItemColor else Color.White,
         elevation = 10.dp,

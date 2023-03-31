@@ -1,4 +1,4 @@
-package com.azmiradi.easter
+package com.azmiradi.easter.splah
 
 import android.view.animation.OvershootInterpolator
 import androidx.compose.animation.core.tween
@@ -16,16 +16,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.azmiradi.easter.NavigationDestination
 import com.azmiradi.easter.NavigationDestination.MAIN
+import com.azmiradi.easter.R
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(onNavigate: (String) -> Unit) {
+fun SplashScreen(
+    viewModel: SplashViewModel = hiltViewModel(),
+    onNavigate: (String) -> Unit
+) {
     val scale = remember {
         androidx.compose.animation.core.Animatable(0f)
     }
 
-    // AnimationEffect
     LaunchedEffect(key1 = true) {
         scale.animateTo(
             targetValue = 0.7f,
@@ -36,8 +41,14 @@ fun SplashScreen(onNavigate: (String) -> Unit) {
                 })
         )
         delay(4000L)
-        onNavigate(MAIN)
+        onNavigate(NavigationDestination.LOGIN)
+//        if (viewModel.isLogin()) {
+//            onNavigate(MAIN)
+//        } else {
+//            onNavigate(NavigationDestination.LOGIN)
+//        }
     }
+
 
     // Image
     Column(
@@ -53,7 +64,7 @@ fun SplashScreen(onNavigate: (String) -> Unit) {
         )
         Spacer(modifier = Modifier.height(14.dp))
         Text(
-            text = "تطبيق دعوات وحضور عيد الميلاد ٢٠٢٣",
+            text = "تطبيق دعوات وحضور عيد القيامة ٢٠٢٣",
             modifier = Modifier.fillMaxWidth(),
             fontSize = 20.sp,
             fontWeight = FontWeight(600),
@@ -62,7 +73,9 @@ fun SplashScreen(onNavigate: (String) -> Unit) {
 
         Text(
             text = "جميع الحقوق محفوظة للجنة الدعوات @٢٠٢٣",
-            modifier = Modifier.fillMaxWidth().padding(top = 100.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 100.dp),
             fontSize = 16.sp,
             fontWeight = FontWeight(400),
             textAlign = TextAlign.Center

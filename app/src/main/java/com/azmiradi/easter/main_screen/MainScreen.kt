@@ -153,7 +153,6 @@ fun MainScreen(
             val data = AESEncryption.decrypt(qrData.value)
             val dataArray = data?.split("\n")
             val nationalId = dataArray?.getOrNull(1)
-            println("nationalID:: "+ nationalId)
 
             if (nationalId != null) {
                 ApplicationDetailsDialog(invitationNumber = nationalId.trim(),

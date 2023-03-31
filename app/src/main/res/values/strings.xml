@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">دعوات وحضور عيد القيامة ٢٠٢٣</string>
     <string name="title_activity_home">HomeActivity</string>
+    <string name="password">الرقم السري</string>
+    <string name="login">تسجيل دخول</string>
+    <string name="username">اسم المستخدم</string>
 </resources>

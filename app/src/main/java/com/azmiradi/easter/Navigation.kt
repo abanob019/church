@@ -10,13 +10,16 @@ import com.azmiradi.easter.NavigationDestination.ADD_ZONE
 import com.azmiradi.easter.NavigationDestination.ALL_APPLICATIONS
 import com.azmiradi.easter.NavigationDestination.ALL_ATTENDED
 import com.azmiradi.easter.NavigationDestination.APPLICATION_DETAILS
+import com.azmiradi.easter.NavigationDestination.LOGIN
 import com.azmiradi.easter.NavigationDestination.MAIN
 import com.azmiradi.easter.all_applications.AllApplicationsScreen
 import com.azmiradi.easter.application_details.ApplicationDetailsScreen
 import com.azmiradi.easter.attendence.AttendedScreen
 import com.azmiradi.easter.dialogs.AddClassDialog
 import com.azmiradi.easter.dialogs.AddZoneDialog
+import com.azmiradi.easter.login.LoginScreen
 import com.azmiradi.easter.main_screen.MainScreen
+import com.azmiradi.easter.splah.SplashScreen
 
 @Composable
 fun Navigation() {
@@ -31,6 +34,16 @@ fun Navigation() {
                     }
                 }
             }
+        }
+
+        composable(LOGIN) {
+            LoginScreen(onNavigate = {
+                navController.navigate(it) {
+                    popUpTo(LOGIN) {
+                        inclusive = true
+                    }
+                }
+            })
         }
         composable(MAIN) {
             MainScreen(onNavigate = {
@@ -78,7 +91,6 @@ object NavigationDestination {
     const val ADD_CLASSES = "add_classes"
     const val ADD_ZONE = "add_zone"
     const val ALL_ATTENDED = "all_attended"
-
-
+    const val LOGIN = "LOGIN"
 }
 
