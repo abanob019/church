@@ -77,7 +77,6 @@ fun AllApplicationsScreen(
             override fun onRequestHandlePathOz(pathOz: PathOz, tr: Throwable?) {
                 val file = File(pathOz.path)
                 val data = ExcelUtils.readFromExcelWorkbook(file)
-                println("Size Of Data:->" + data.size)
                 if (data.isNotEmpty()) {
                     selectedApplications.clear()
                     selectedApplications.addAll(data)

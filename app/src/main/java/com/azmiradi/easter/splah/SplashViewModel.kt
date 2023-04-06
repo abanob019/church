@@ -11,7 +11,6 @@ class SplashViewModel @Inject constructor(private val myPreferences: MyPreferenc
 
     fun logout() {
         myPreferences.isLogin = false
-        myPreferences.isAdmin = false
-    }
+     }
 
 }

@@ -16,8 +16,11 @@ interface ApplicationsDao {
     @Query("SELECT * FROM applicationpojo")
     fun getApplications(): Flow<List<ApplicationPojo>>
 
-    @Query("SELECT * FROM applicationpojo where nationalID= :invitationID")
-    fun getApplication(invitationID: String): Flow<List<ApplicationPojo>>
+    @Query("SELECT * FROM applicationpojo where nationalID= :nationalID")
+    fun getApplication(nationalID: String): Flow<List<ApplicationPojo>>
+
+    @Query("SELECT * FROM applicationpojo where invitationNumber= :invitationID")
+    fun getApplicationByInvitationID(invitationID: String): Flow<List<ApplicationPojo>>
 
     @Update
     suspend fun updateApplications(applicationPojo: ApplicationPojo)

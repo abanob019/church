@@ -4,4 +4,8 @@
     <string name="password">الرقم السري</string>
     <string name="login">تسجيل دخول</string>
     <string name="username">اسم المستخدم</string>
+    <string name="email">البريد الالكتروني</string>
+    <string name="invitation_number">رقم الدعوة</string>
+    <string name="search">بحث</string>
+    <string name="back">رجوع</string>
 </resources>

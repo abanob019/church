@@ -107,8 +107,32 @@ class ApplicationDetailsViewModel @Inject constructor(val application: Applicati
                     _stateUpdateApplication.value = DataState(error = it.message.toString())
                 }
         }
-
     }
+
+    fun getApplicationDetailsByInvitationID(invitationNumber: String) {
+        _stateApplicationDetails.value = DataState(isLoading = true)
+        FirebaseDatabase.getInstance().reference.addListenerForSingleValueEvent(object :
+            ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (data in snapshot.child(APPLICATIONS).children){
+                    val application = data.getValue(ApplicationPojo::class.java)
+                    if (application?.invitationNumber == invitationNumber)
+                    {
+                        _stateApplicationDetails.value =
+                            DataState(data = DetailsData(application, emptyList(), emptyList()))
+                        return
+                    }
+                    _stateApplicationDetails.value =
+                        DataState(error = "الرقم غير مسجل")
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                _stateApplicationDetails.value = DataState(error = error.message)
+            }
+        })
+    }
+
 
     fun sendMail(mailTo: String, file: File? = null, name: String? = "") {
         _stateSendMail.value = DataState(isLoading = true)
@@ -197,7 +221,7 @@ class ApplicationDetailsViewModel @Inject constructor(val application: Applicati
     fun getApplicationDetailsByInvitation(invitationNumber: String) {
         _stateApplicationDetails.value = DataState(isLoading = true)
         if (isOffline()) {
-            appDatabase.getApplication(invitationNumber).onEach {
+            appDatabase.getApplicationByInvitationID(invitationNumber).onEach {
                 if (it.isNotEmpty()) {
                     _stateApplicationDetails.value = DataState(
                         data = DetailsData(

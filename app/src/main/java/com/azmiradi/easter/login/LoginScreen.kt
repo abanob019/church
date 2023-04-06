@@ -1,9 +1,12 @@
 package com.azmiradi.easter.login
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -14,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +34,7 @@ fun LoginScreen(
     onNavigate: (String) -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     viewModel.state.value.data?.let {
         LaunchedEffect(Unit) {
             onNavigate(NavigationDestination.MAIN)
@@ -39,7 +44,9 @@ fun LoginScreen(
     CustomContainer(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(Color.White)
+            .verticalScroll(rememberScrollState())
+            .imePadding(),
         baseViewModel = viewModel,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -50,7 +57,9 @@ fun LoginScreen(
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "",
-            modifier = Modifier.fillMaxSize().weight(1f)
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1f)
         )
         Spacer(modifier = Modifier.height(90.dp))
         val username = rememberSaveable() {
@@ -61,7 +70,7 @@ fun LoginScreen(
         }
 
         CustomTextInput(
-            hint = stringResource(id = R.string.username),
+            hint = stringResource(id = R.string.email),
             mutableState = username,
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,9 +93,13 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 24.dp, end = 24.dp), onClick = {
-                viewModel.loginAdmin(
-                    username.value, passwordInput.value
-                )
+                if (username.value.isNotEmpty() && passwordInput.value.isNotEmpty()) {
+                    viewModel.loginAdmin(
+                        username.value.trim(), passwordInput.value
+                    )
+                } else {
+                    Toast.makeText(context, "ادخل البيانات بشكل صحيح", Toast.LENGTH_SHORT).show()
+                }
             }, colors = ButtonDefaults.buttonColors(PrimaryColor),
             shape = RoundedCornerShape(8.dp)
         ) {

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.azmiradi.easter.BaseViewModel
 import com.azmiradi.easter.DataState
 import com.azmiradi.easter.MyPreferences
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -32,7 +33,6 @@ class LoginViewModel @Inject constructor(val myPreferences: MyPreferences) : Bas
             _state.value = DataState(isLoading = true)
             checkUserExist(username, password,
                 userExit = {
-                    saveData(false,username)
                     _state.value = DataState(data = true)
                 }, userNotExit = {
                     _state.value =
@@ -84,11 +84,9 @@ class LoginViewModel @Inject constructor(val myPreferences: MyPreferences) : Bas
             User(username = email, password = password)
     }
 
-    private fun saveData(isAdmin: Boolean, userName: String) {
+    private fun saveData(rule: Rule) {
         myPreferences.isLogin = true
-        myPreferences.isAdmin = isAdmin
-        myPreferences.userName = userName
-
+        myPreferences.ruel = rule
     }
 
     override fun resetState() {
@@ -106,18 +104,26 @@ class LoginViewModel @Inject constructor(val myPreferences: MyPreferences) : Bas
         return _state.value.error
     }
 
-    fun loginAdmin(username: String, password: String) {
-        if (username.equals("admin", true)
-            &&
-            password.equals("20232023", true)
-        ) {
-            saveData(true, username)
-            _state.value = DataState(data = true)
+    fun loginAdmin(email: String, password: String) {
+        _state.value = DataState(isLoading = true)
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(
+            email, password
+        ).addOnSuccessListener {
 
-        } else {
-            _state.value =
-                DataState(error = "Error Information ! ")
+            Rule.values().find {
+                it.email == email
+            }?.let { it1 -> saveData(it1) }
+
+            _state.value = DataState(data = true)
+        }.addOnFailureListener {
+            _state.value = DataState(error = "Information Error! Try Again")
         }
     }
 
+    enum class Rule(val email: String) {
+        ADMIN("admin@gmail.com"),
+        ATTENDEES("attend@gmail.com"),
+        READ_B("read-b@gmail.com"),
+        READ_A("read-a@gmail.com")
+    }
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.azmiradi.easter.DataState
 import com.azmiradi.easter.FirebaseConstants.APPLICATIONS
 import com.azmiradi.easter.FirebaseConstants.ZONE
+import com.azmiradi.easter.MyPreferences
 import com.azmiradi.easter.all_applications.ApplicationPojo
 import com.azmiradi.easter.local_database.AppDatabase
 import com.azmiradi.easter.local_database.PreferenceHelper
@@ -33,7 +34,10 @@ import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 
 @HiltViewModel
-class MainViewModel @Inject constructor(val application: Application) : ViewModel() {
+class MainViewModel @Inject constructor(val application: Application,
+val myPreferences: MyPreferences) : ViewModel() {
+
+
     private val _stateSendMail = mutableStateOf(DataState<Boolean>())
     val stateSendMail: State<DataState<Boolean>> = _stateSendMail
     var job: Job? = null
