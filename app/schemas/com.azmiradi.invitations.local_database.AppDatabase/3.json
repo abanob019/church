@@ -1,0 +1,210 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "d565d51f86672b76d08a4bc33462d941",
+    "entities": [
+      {
+        "tableName": "ApplicationPojo",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`email` TEXT, `nationalID` TEXT NOT NULL, `phone` TEXT, `jobTitle` TEXT, `title` TEXT, `name` TEXT, `employer` TEXT, `className` TEXT, `zoneID` TEXT, `isApproved` INTEGER, `note` TEXT, `image2` TEXT, `image1` TEXT, `isAttend` INTEGER, `row` TEXT, `seat` TEXT, `recomandedBy` TEXT, `priority` INTEGER, `isSandedApproved` INTEGER, `invitationNumber` TEXT, `zoneColor` TEXT, `zoneName` TEXT, `attendDate` INTEGER, `code` TEXT, PRIMARY KEY(`nationalID`))",
+        "fields": [
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "nationalID",
+            "columnName": "nationalID",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phone",
+            "columnName": "phone",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "jobTitle",
+            "columnName": "jobTitle",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "employer",
+            "columnName": "employer",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "className",
+            "columnName": "className",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "zoneID",
+            "columnName": "zoneID",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isApproved",
+            "columnName": "isApproved",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "image2",
+            "columnName": "image2",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "image1",
+            "columnName": "image1",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isAttend",
+            "columnName": "isAttend",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "row",
+            "columnName": "row",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "seat",
+            "columnName": "seat",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "recomandedBy",
+            "columnName": "recomandedBy",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "priority",
+            "columnName": "priority",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isSandedApproved",
+            "columnName": "isSandedApproved",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "invitationNumber",
+            "columnName": "invitationNumber",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "zoneColor",
+            "columnName": "zoneColor",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "zoneName",
+            "columnName": "zoneName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "attendDate",
+            "columnName": "attendDate",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "nationalID"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "Zone",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`zoneID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `zoneName` TEXT, `zoneColor` TEXT, `code` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "zoneID",
+            "columnName": "zoneID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zoneName",
+            "columnName": "zoneName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "zoneColor",
+            "columnName": "zoneColor",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "zoneID"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd565d51f86672b76d08a4bc33462d941')"
+    ]
+  }
+}

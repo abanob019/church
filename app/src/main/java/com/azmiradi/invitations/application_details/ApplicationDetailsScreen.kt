@@ -1,4 +1,4 @@
-package com.azmiradi.easter.application_details
+package com.azmiradi.invitations.application_details
 
 import android.content.ContentValues
 import android.content.Context
@@ -12,14 +12,41 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidmads.library.qrgenearator.QRGContents
 import androidmads.library.qrgenearator.QRGEncoder
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
+import androidx.compose.material.Card
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.Icon
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,10 +59,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.azmiradi.easter.ProgressBar
-import com.azmiradi.easter.local_database.Zone
+import com.azmiradi.invitations.ProgressBar
 import com.azmiradi.invitations.all_applications.ApplicationPojo
-import com.azmiradi.invitations.application_details.ApplicationDetailsViewModel
+import com.azmiradi.invitations.local_database.Zone
 import com.izettle.html2bitmap.Html2Bitmap
 import com.izettle.html2bitmap.content.WebViewContent.html
 import kotlinx.coroutines.Dispatchers
@@ -187,7 +213,7 @@ fun ApplicationDetailsScreen(
             title.value = applicationPojo?.title ?: ""
             name.value = applicationPojo?.name ?: ""
             jobTitle.value = applicationPojo?.jobTitle ?: ""
-           // nationalID.value = applicationPojo?.nationalID ?: ""
+            // nationalID.value = applicationPojo?.nationalID ?: ""
             phone.value = applicationPojo?.phone ?: ""
 
             applicationPojo?.employer?.let {
@@ -205,12 +231,13 @@ fun ApplicationDetailsScreen(
 //                        }
 //                    }
 //                    invitationBitmap.value = invitation
+                    applicationPojo?.let {
+                        qrBitmap.value = createQRCode(
+                            it
+                        )
+                    }
 
-                    qrBitmap.value = com.azmiradi.invitations.application_details.createQRCode(
-                        applicationPojo, withColor = true
-                    )
-
-                    qrPath.value = com.azmiradi.invitations.application_details.saveBitmap(
+                    qrPath.value = qrBitmap.value?.saveBitmap(
                         folder = "/Invitations/ColorsQRs",
                         (applicationPojo?.name ?: "") + "_" + (applicationPojo?.invitationNumber
                             ?: ""),
@@ -264,47 +291,31 @@ fun ApplicationDetailsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(20.dp))
-            com.azmiradi.invitations.application_details.CustomTextFile(
-                data = title,
-                title = "اللقب",
-                keyboard = KeyboardType.Text
-            )
+            CustomTextFile(data = title, title = "اللقب", keyboard = KeyboardType.Text)
 
-            com.azmiradi.invitations.application_details.CustomTextFile(
-                data = name,
-                title = "الاسم",
-                keyboard = KeyboardType.Text
-            )
+            CustomTextFile(data = name, title = "الاسم", keyboard = KeyboardType.Text)
 
 
-            com.azmiradi.invitations.application_details.CustomTextFile(
-                data = jobTitle,
-                title = "المسمي الوظيفي",
-                keyboard = KeyboardType.Text
-            )
+            CustomTextFile(data = jobTitle, title = "المسمي الوظيفي", keyboard = KeyboardType.Text)
 
-         //   CustomText(value = applicationPojo?.row ?: "------", title = "الصف")
+            //   CustomText(value = applicationPojo?.row ?: "------", title = "الصف")
 
-          //  CustomText(value = applicationPojo?.seat ?: "------", title = "الكرسي")
+            //  CustomText(value = applicationPojo?.seat ?: "------", title = "الكرسي")
 
-            com.azmiradi.invitations.application_details.CustomText(
-                value = applicationPojo?.zoneName ?: "------", title = "اسم المنطقة"
-            )
+            CustomText(value = applicationPojo?.zoneName ?: "------", title = "اسم المنطقة")
 
-            com.azmiradi.invitations.application_details.CustomText(
-                value = applicationPojo?.zoneColor ?: "------", title = "لون المنطقة"
-            )
+            CustomText(value = applicationPojo?.zoneColor ?: "------", title = "لون المنطقة")
 
             //CustomTextFile(data = nationalID, title = "الرقم القومي", keyboard = KeyboardType.Text)
 
-           // CustomTextFile(data = phone, title = "رقم الهاتف", keyboard = KeyboardType.Text)
+            // CustomTextFile(data = phone, title = "رقم الهاتف", keyboard = KeyboardType.Text)
 
 //            SampleSpinner(
 //                "الجهة", list = listOfEmployer, employer.value
 //            ) {
 //                employer.value = it
 //            }
-          //  CustomTextFile(data = priority, title = "الاولوية", keyboard = KeyboardType.Decimal)
+            //  CustomTextFile(data = priority, title = "الاولوية", keyboard = KeyboardType.Decimal)
 
 //            SampleSpinner(
 //                "نوع الدعوة", list = classes.mapNotNull {
@@ -323,12 +334,7 @@ fun ApplicationDetailsScreen(
 //            }
 
 
-            com.azmiradi.invitations.application_details.CustomTextFile(
-                data = note,
-                title = "كتابة ملاحظات",
-                height = 150,
-                isSingleLine = false
-            )
+            CustomTextFile(data = note, title = "كتابة ملاحظات", height = 150, isSingleLine = false)
 
             if (applicationPojo?.isApproved == true) {
                 Spacer(modifier = Modifier.height(10.dp))
@@ -351,7 +357,7 @@ fun ApplicationDetailsScreen(
                             applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
                             applicationPojo?.title = title.value
                             applicationPojo?.name = name.value
-                           // applicationPojo?.nationalID = nationalID.value
+                            // applicationPojo?.nationalID = nationalID.value
                             applicationPojo?.jobTitle = jobTitle.value
                             applicationPojo?.phone = phone.value
                             applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
@@ -377,13 +383,13 @@ fun ApplicationDetailsScreen(
                             applicationPojo?.priority = priority.value.trim().toIntOrNull() ?: 0
                             applicationPojo?.title = title.value
                             applicationPojo?.name = name.value
-                           // applicationPojo?.nationalID = nationalID.value
+                            // applicationPojo?.nationalID = nationalID.value
                             applicationPojo?.jobTitle = jobTitle.value
                             applicationPojo?.phone = phone.value
                             applicationPojo?.employer = listOfEmployer.getOrNull(employer.value)
                             applicationPojo?.seat = char.value
                             applicationPojo?.row = row.value
-                      //      applicationPojo?.let { viewModel.updateApplication(it) }
+                            //      applicationPojo?.let { viewModel.updateApplication(it) }
                         }) {
                         Text(
                             text = "الغاء تفعيل الدعوة", fontSize = 16.sp
@@ -456,7 +462,7 @@ fun ApplicationDetailsScreen(
                     applicationPojo?.seat = char.value
                     applicationPojo?.row = row.value
                     applicationPojo?.let { viewModel.updateApplication(it) }
-                   // viewModel.sendMail(applicationPojo?.email ?: "", null)
+                    // viewModel.sendMail(applicationPojo?.email ?: "", null)
                 }) {
                     Text(
                         text = "الموافق علي الدعوه", fontSize = 16.sp
@@ -498,8 +504,8 @@ fun Context.prepareQRWWithInvitation(
     applicationPojo: ApplicationPojo?, zone: Zone?, onError: (String) -> Unit
 ): Bitmap? {
     applicationPojo?.let {
-        val qrBitmap = com.azmiradi.invitations.application_details.createQRCode(
-            applicationPojo, withColor = true
+        val qrBitmap = createQRCode(
+            applicationPojo
         )
         val qrUri = qrBitmap.saveBitmap(
             folder = "/Invitations/ColorsQRs",
@@ -543,14 +549,14 @@ fun Context.prepareInvitation(applicationName: String, qrImage: String): Bitmap?
 
 
 fun createQRCode(
-    applicationPojo: ApplicationPojo?, withColor: Boolean
+    applicationPojo: ApplicationPojo
 ): Bitmap {
 
     val data =
-        java.lang.StringBuilder("").append(applicationPojo?.title + " : " + applicationPojo?.name)
-            .append("\n").append(applicationPojo?.nationalID).append("\n")
-            .append(applicationPojo?.zoneName ?: "").append(" - ").append(applicationPojo?.employer)
-            .append("\n").append(applicationPojo?.zoneColor ?: "")
+        java.lang.StringBuilder("").append(applicationPojo.title + " : " + applicationPojo.name)
+            .append("\n").append(applicationPojo.nationalID).append("\n")
+            .append(applicationPojo.zoneName ?: "").append(" - ").append(applicationPojo.employer)
+            .append("\n").append(applicationPojo.zoneColor ?: "")
 
 //    val options = QrOptions.Builder(115)
 //        .setColors(
@@ -571,11 +577,9 @@ fun createQRCode(
 //        QrData.Text(data.toString()), options, StandardCharsets.UTF_8
 //    )
 
-    // Initializing the QR Encoder with your value to be encoded, type you required and Dimension
-    // Initializing the QR Encoder with your value to be encoded, type you required and Dimension
-
     val qrgEncoder = QRGEncoder(
-        AESEncryption.encrypt(data.toString()), null, QRGContents.Type.TEXT, 350
+        AESEncryption.encrypt(data.toString()),
+        null, QRGContents.Type.TEXT, 350
     )
 
 //    if (withColor)

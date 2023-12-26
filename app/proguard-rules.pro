@@ -5,9 +5,9 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
--keep class  com.azmiradi.easter.all_applications.ApplicationPojo
--keep class  com.azmiradi.easter.local_database.Zone
--keep class  com.azmiradi.easter.local_database.Zones
+-keep class  com.azmiradi.invitations.all_applications.ApplicationPojo
+-keep class  com.azmiradi.invitations.local_database.Zone
+-keep class  com.azmiradi.invitations.local_database.Zones
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.

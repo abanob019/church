@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace 'com.azmiradi.easter'
+    namespace 'com.azmiradi.invitations'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.azmiradi.easter"
+        applicationId "com.azmiradi.invitations"
         minSdk 26
         targetSdk 33
         versionCode 5
@@ -88,7 +88,7 @@ dependencies {
 
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-database'
-    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-auth'
 
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
     implementation "androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03"
@@ -100,7 +100,6 @@ dependencies {
     implementation 'com.sun.mail:android-mail:1.6.4'
     implementation 'com.github.alexzhirkevich:custom-qr-generator:1.5.3'
     implementation files('libs/poi-3.7.jar')
-
     implementation files('libs/jxl-2.6.12.jar')
     implementation files('libs/log4j-1.2.14.jar')
 
