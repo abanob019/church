@@ -474,7 +474,7 @@ fun ApplicationDetailsScreen(
     }
 }
 
-private fun Context.sendInvitationViaWhatsApp(
+fun Context.sendInvitationViaWhatsApp(
     imgUri: String,
     phone: String,
     name: String,

@@ -35,17 +35,20 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.onimur.handlepathoz.HandlePathOz
 import br.com.onimur.handlepathoz.HandlePathOzListener
 import br.com.onimur.handlepathoz.model.PathOz
-import com.azmiradi.invitations.NavigationDestination.APPLICATION_DETAILS
 import com.azmiradi.invitations.ProgressBar
 import com.azmiradi.invitations.R
 import com.azmiradi.invitations.application_details.CustomTextFile
 import com.azmiradi.invitations.application_details.SampleSpinner
+import com.azmiradi.invitations.application_details.createQRCode
+import com.azmiradi.invitations.application_details.saveBitmap
+import com.azmiradi.invitations.application_details.sendInvitationViaWhatsApp
 import com.azmiradi.invitations.exel.common.ExcelUtils
 import com.azmiradi.invitations.ui.theme.SelectItemColor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
-import kotlin.collections.ArrayList
 
 @OptIn(FlowPreview::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -222,8 +225,25 @@ fun AllApplicationsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
-            ShowItems(selectedIndex, selectedApplications, applicationsList, onClick = {
-                onNavigate(APPLICATION_DETAILS, it)
+            val coroutine = rememberCoroutineScope()
+            ShowItems(selectedIndex, selectedApplications, applicationsList, onClick = {applicationPojo->
+                // onNavigate(APPLICATION_DETAILS, it)
+                coroutine.launch(Dispatchers.IO) {
+                    val qrBitmap = createQRCode(applicationPojo)
+                    val qrUri = qrBitmap.saveBitmap(
+                        folder = "/Invitations/ColorsQRs",
+                        (applicationPojo.name ?: "") + "_" + (applicationPojo.phone ?: ""),
+                        context
+                    ) {
+
+                    }
+                    context.sendInvitationViaWhatsApp(
+                        qrUri.toString(),
+                        "01222369185",
+                        applicationPojo.name ?: "",
+                        applicationPojo.invitationNumber ?: ""
+                    )
+                }
             })
         }
     }
@@ -305,7 +325,7 @@ fun ShowItems(
     selectable: MutableState<Int>,
     selectedItems: SnapshotStateList<ApplicationPojo>,
     applicationsList: SnapshotStateList<ApplicationPojo>,
-    onClick: (nationalID: String) -> Unit,
+    onClick: (applicationPojo: ApplicationPojo) -> Unit,
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(
@@ -343,7 +363,7 @@ fun ShowItems(
 fun ApplicationItem(
     applicationPojo: ApplicationPojo,
     selectable: Boolean = false,
-    onLongClick: ((nationalID: String) -> Unit)? = null,
+    onLongClick: ((applicationPojo: ApplicationPojo) -> Unit)? = null,
     selectedApplications: SnapshotStateList<ApplicationPojo>? = null,
 ) {
     Card(
@@ -356,7 +376,7 @@ fun ApplicationItem(
 //                )
 //                else selectedApplications?.add(applicationPojo)
                 if (onLongClick != null) {
-                    onLongClick(applicationPojo.nationalID ?: "")
+                    onLongClick(applicationPojo)
                 }
             }, onLongClick = {
 

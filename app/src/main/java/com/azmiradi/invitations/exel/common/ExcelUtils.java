@@ -20,11 +20,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Excel Worksheet Utility Methods
@@ -332,19 +332,16 @@ public class ExcelUtils {
             for (int i = 1; i < sheet.getRows(); i++) {
 
                 ApplicationPojo applicationPojo = new ApplicationPojo();
+                String id = sheet.getCell(0, i).getContents().trim();
+                applicationPojo.setInvitationNumber(id);
 
-                String id = sheet.getCell(0, i).getContents();
-                String idEnglish = new BigDecimal(id).toString();
-                applicationPojo.setInvitationNumber(idEnglish);
-
-                String companionNationalID = Calendar.getInstance().getTimeInMillis() + "" + i+ ""+idEnglish;
-
-                String invitationCode = sheet.getCell(0, i).getContents();
+                String companionNationalID = Calendar.getInstance().getTimeInMillis() + "" + i + "" + id;
+                String invitationCode = sheet.getCell(0, i).getContents().trim();
                 applicationPojo.setCode(invitationCode);
 
                 String namePlusTitle = sheet.getCell(1, i).getContents();
 
-                if (namePlusTitle.contains("/") ) {
+                if (namePlusTitle.contains("/")) {
                     String[] fullName = namePlusTitle.split("/");
                     applicationPojo.setTitle(fullName[0]);
                     applicationPojo.setName(fullName[1]);
@@ -383,10 +380,10 @@ public class ExcelUtils {
 
                 if (applicationPojo.getTitle() == null)
                     applicationPojo.setTitle("");
-                importedExcelData.add(applicationPojo);
+
+                if (!Objects.equals(applicationPojo.getCode(), ""))
+                    importedExcelData.add(applicationPojo);
             }
-
-
         } catch (
                 IOException e) {
             Log.e(TAG, "Error Reading Exception: ", e);

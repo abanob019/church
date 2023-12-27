@@ -37,7 +37,7 @@ import com.azmiradi.invitations.login.LoginViewModel
 import com.azmiradi.invitations.ui.theme.PrimaryColor
 import com.azmiradi.invitations.ui.theme.SecondaryColor
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 
@@ -47,8 +47,9 @@ fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(), onNavigate: (String) -> Unit
 ) {
 
-    val cameraPermissionState = rememberPermissionState(
-        android.Manifest.permission.CAMERA
+    val permissionsState = rememberMultiplePermissionsState(
+        listOf(
+            android.Manifest.permission.CAMERA)
     )
     val qrData = rememberSaveable {
         mutableStateOf("")
@@ -91,7 +92,7 @@ fun MainScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (cameraPermissionState.hasPermission) {
+        if (permissionsState.allPermissionsGranted) {
             when (viewModel.myPreferences.ruel) {
                 LoginViewModel.Rule.ADMIN -> {
                     Button(modifier = Modifier
@@ -218,7 +219,7 @@ fun MainScreen(
                 .fillMaxWidth()
                 .padding(end = 50.dp, start = 50.dp),
                 onClick = {
-                    cameraPermissionState.launchPermissionRequest()
+                    permissionsState.launchMultiplePermissionRequest()
                 }) {
                 Text(
                     text = "تهئية التصاريح", fontSize = 16.sp
