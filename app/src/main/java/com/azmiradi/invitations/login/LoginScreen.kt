@@ -51,15 +51,12 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-
-        Spacer(modifier = Modifier.height(70.dp))
-
         Image(
-            painter = painterResource(id = R.drawable.logo),
+            painter = painterResource(id = R.drawable.catedral),
             contentDescription = "",
             modifier = Modifier
                 .fillMaxSize()
-                .weight(1f)
+                .weight(1f),
         )
         Spacer(modifier = Modifier.height(90.dp))
         val username = rememberSaveable() {

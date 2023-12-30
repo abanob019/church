@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,13 +48,14 @@ fun SplashScreen(onNavigate: (String) -> Unit) {
     ) {
 
         Image(
-            painter = painterResource(id = R.drawable.logo),
+            painter = painterResource(id = R.drawable.catedral),
             contentDescription = "Logo",
             modifier = Modifier.scale(scale.value)
         )
         Spacer(modifier = Modifier.height(14.dp))
+
         Text(
-            text = "تطبيق دعوات وحضور عيد القيامة ٢٠٢٣",
+            text = stringResource(id = R.string.app_name),
             modifier = Modifier.fillMaxWidth(),
             fontSize = 20.sp,
             fontWeight = FontWeight(600),
@@ -61,8 +63,10 @@ fun SplashScreen(onNavigate: (String) -> Unit) {
         )
 
         Text(
-            text = "جميع الحقوق محفوظة للجنة الدعوات @٢٠٢٣",
-            modifier = Modifier.fillMaxWidth().padding(top = 100.dp),
+            text = "جميع الحقوق محفوظة للجنة الدعوات @٢٠٢٤",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 100.dp),
             fontSize = 16.sp,
             fontWeight = FontWeight(400),
             textAlign = TextAlign.Center
